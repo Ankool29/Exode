@@ -150,6 +150,8 @@ jobs:
           ./godot --headless --verbose --path game --export-debug "Android" ../build/exode-debug.apk 2>&1 | tee export.log || true
           ls -la build
           test -s build/exode-debug.apk
+          unzip -l build/exode-debug.apk | grep "lib/"
+          unzip -l build/exode-debug.apk | grep -q "lib/arm64-v8a/libexode_godot" || { echo "Bibliotheque EXODE absente de l'APK"; exit 1; }
           (cd game && zip -r ../build/exode-bin.zip bin)
       - uses: actions/upload-artifact@v4
         with:

@@ -1,0 +1,7 @@
+/target/
+/build/
+game/.godot/
+game/bin/*
+!game/bin/.gitkeep
+*.tmp
+*.keystore

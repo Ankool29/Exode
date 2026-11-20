@@ -89,7 +89,7 @@ jobs:
           grep -q "SELFTEST OK" selftest.log
 
   apk:
-    needs: [lib-android, godot]
+    needs: [lib-android, lib-linux, godot]
     runs-on: ubuntu-latest
     permissions:
       contents: write
@@ -98,6 +98,10 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: lib-android
+          path: game/bin
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-linux
           path: game/bin
       - uses: actions/setup-java@v4
         with:
@@ -133,6 +137,8 @@ jobs:
           export/android/debug_keystore_user = "androiddebugkey"
           export/android/debug_keystore_pass = "android"
           EOF
+          cp ~/.config/godot/editor_settings-4.4.tres ~/.config/godot/editor_settings-4.tres
+          cat ~/.config/godot/editor_settings-4.tres
       - name: Export APK
         env:
           GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
@@ -141,7 +147,7 @@ jobs:
         run: |
           mkdir -p build
           ./godot --headless --path game --import
-          ./godot --headless --path game --export-debug "Android" ../build/exode-debug.apk
+          ./godot --headless --verbose --path game --export-debug "Android" ../build/exode-debug.apk 2>&1 | tee export.log || true
           ls -la build
           test -s build/exode-debug.apk
           (cd game && zip -r ../build/exode-bin.zip bin)

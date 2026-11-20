@@ -1,0 +1,9 @@
+[package]
+name = "exode-bench"
+description = "Bancs de mesure en ligne de commande (F1, F2, F11)."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[dependencies]
+exode-core = { path = "../exode-core" }

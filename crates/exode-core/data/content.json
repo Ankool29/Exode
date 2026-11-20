@@ -1,0 +1,34 @@
+{
+  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts.",
+  "items": [
+    { "id": "minerai_a",    "name": "Minerai A",      "mass": 1000, "waste": false, "color": "#8c95a3" },
+    { "id": "minerai_b",    "name": "Minerai B",      "mass": 1000, "waste": false, "color": "#c0703f" },
+    { "id": "plaque_a",     "name": "Plaque A",       "mass": 750,  "waste": false, "color": "#d5dae2" },
+    { "id": "plaque_b",     "name": "Plaque B",       "mass": 750,  "waste": false, "color": "#e08a4c" },
+    { "id": "engrenage",    "name": "Engrenage",      "mass": 1250, "waste": false, "color": "#b8bec8" },
+    { "id": "scories",      "name": "Scories",        "mass": 1000, "waste": true,  "color": "#6b6a3c" },
+    { "id": "chutes_metal", "name": "Chutes de metal","mass": 250,  "waste": true,  "color": "#7d7a52" }
+  ],
+  "recipes": [
+    { "id": "fonte_a",      "category": "fonte",      "time": 240, "inputs": [["minerai_a", 4]],    "outputs": [["plaque_a", 4], ["scories", 1]] },
+    { "id": "fonte_b",      "category": "fonte",      "time": 240, "inputs": [["minerai_b", 4]],    "outputs": [["plaque_b", 4], ["scories", 1]] },
+    { "id": "engrenage",    "category": "assemblage", "time": 60,  "inputs": [["plaque_a", 2]],     "outputs": [["engrenage", 1], ["chutes_metal", 1]] },
+    { "id": "refonte_chutes","category": "recyclage", "time": 180, "inputs": [["chutes_metal", 6]], "outputs": [["plaque_a", 2]] }
+  ],
+  "resources": [
+    { "id": "ressource_a", "item": "minerai_a", "color": "#7a8494" },
+    { "id": "ressource_b", "item": "minerai_b", "color": "#a85f33" }
+  ],
+  "buildings": [
+    { "id": "convoyeur",   "name": "Convoyeur",   "kind": "belt",      "size": [1, 1], "power": 0,       "speed": 16 },
+    { "id": "bras",        "name": "Bras",        "kind": "inserter",  "size": [1, 1], "power": 13000,   "speed": 12 },
+    { "id": "foreuse",     "name": "Foreuse",     "kind": "drill",     "size": [2, 2], "power": 90000,   "speed": 60 },
+    { "id": "four",        "name": "Four",        "kind": "machine",   "size": [2, 2], "power": 90000,   "speed": 1000, "category": "fonte",      "auto_recipe": true },
+    { "id": "assembleur",  "name": "Assembleur",  "kind": "machine",   "size": [2, 2], "power": 75000,   "speed": 1000, "category": "assemblage" },
+    { "id": "recycleur",   "name": "Recycleur",   "kind": "machine",   "size": [2, 2], "power": 60000,   "speed": 1000, "category": "recyclage", "auto_recipe": true },
+    { "id": "coffre",      "name": "Coffre",      "kind": "chest",     "size": [1, 1], "power": 0,       "capacity": 800 },
+    { "id": "benne",       "name": "Benne a dechets", "kind": "waste_bin", "size": [1, 1], "power": 0,   "capacity": 50 },
+    { "id": "poteau",      "name": "Poteau",      "kind": "pole",      "size": [1, 1], "power": 0,       "supply_radius": 3, "wire_reach": 9 },
+    { "id": "generateur",  "name": "Generateur (provisoire)", "kind": "generator", "size": [3, 3], "power": 1000000 }
+  ]
+}

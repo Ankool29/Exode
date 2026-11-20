@@ -1,0 +1,159 @@
+# Compilation et verification d'EXODE.
+# - noyau : tests Rust, banc de mesure rapide ;
+# - bibliotheques natives : Linux x86_64 (tests) et Android arm64 (jeu) ;
+# - godot : autotest sans ecran du projet avec la bibliotheque Linux ;
+# - apk : export Android de debogage, publie en artefact et, sur main, dans la
+#   pre-version "dev" (telechargeable directement depuis le telephone).
+name: build
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+
+env:
+  GODOT_VERSION: "4.4.1"
+  CARGO_TERM_COLOR: always
+
+jobs:
+  noyau:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Tests du noyau
+        run: cargo test -p exode-core
+      - name: Banc de mesure rapide (indicatif)
+        run: cargo run --release -p exode-bench -- all
+
+  lib-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Compilation
+        run: |
+          cargo build --release -p exode-godot
+          mkdir -p out
+          cp target/release/libexode_godot.so out/libexode_godot.linux.x86_64.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-linux
+          path: out/
+
+  lib-android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+      - uses: Swatinem/rust-cache@v2
+      - uses: nttld/setup-ndk@v1
+        id: ndk
+        with:
+          ndk-version: r27c
+      - name: Compilation Android arm64
+        env:
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android24-clang
+          CARGO_TARGET_AARCH64_LINUX_ANDROID_AR: ${{ steps.ndk.outputs.ndk-path }}/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-ar
+        run: |
+          cargo build --release -p exode-godot --target aarch64-linux-android
+          mkdir -p out
+          cp target/aarch64-linux-android/release/libexode_godot.so out/libexode_godot.android.arm64.so
+      - uses: actions/upload-artifact@v4
+        with:
+          name: lib-android
+          path: out/
+
+  godot:
+    needs: lib-linux
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-linux
+          path: game/bin
+      - name: Installation de Godot
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
+      - name: Import et autotest
+        run: |
+          ./godot --headless --path game --import
+          ./godot --headless --path game -- --selftest | tee selftest.log
+          grep -q "SELFTEST OK" selftest.log
+
+  apk:
+    needs: [lib-android, godot]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: lib-android
+          path: game/bin
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+      - name: Outils Android
+        run: sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+      - name: Godot et modeles d'export
+        run: |
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          unzip -q Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip
+          mv Godot_v${GODOT_VERSION}-stable_linux.x86_64 godot
+          wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          mkdir -p ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable
+          unzip -q Godot_v${GODOT_VERSION}-stable_export_templates.tpz
+          mv templates/* ~/.local/share/godot/export_templates/${GODOT_VERSION}.stable/
+      - name: Cle de signature de debogage
+        run: |
+          keytool -keyalg RSA -genkeypair -alias androiddebugkey -keypass android \
+            -keystore debug.keystore -storepass android \
+            -dname "CN=Android Debug,O=Android,C=US" -validity 9999 -deststoretype pkcs12
+          mkdir -p ~/.config/godot
+          cat > ~/.config/godot/editor_settings-4.4.tres <<EOF
+          [gd_resource type="EditorSettings" format=3]
+
+          [resource]
+          export/android/android_sdk_path = "$ANDROID_SDK_ROOT"
+          export/android/java_sdk_path = "$JAVA_HOME"
+          export/android/debug_keystore = "$PWD/debug.keystore"
+          export/android/debug_keystore_user = "androiddebugkey"
+          export/android/debug_keystore_pass = "android"
+          EOF
+      - name: Export APK
+        env:
+          GODOT_ANDROID_KEYSTORE_DEBUG_PATH: ${{ github.workspace }}/debug.keystore
+          GODOT_ANDROID_KEYSTORE_DEBUG_USER: androiddebugkey
+          GODOT_ANDROID_KEYSTORE_DEBUG_PASSWORD: android
+        run: |
+          mkdir -p build
+          ./godot --headless --path game --import
+          ./godot --headless --path game --export-debug "Android" ../build/exode-debug.apk
+          ls -la build
+          test -s build/exode-debug.apk
+          (cd game && zip -r ../build/exode-bin.zip bin)
+      - uses: actions/upload-artifact@v4
+        with:
+          name: exode-apk
+          path: build/
+      - name: Pre-version "dev" (branche main)
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release delete dev --yes --cleanup-tag || true
+          gh release create dev build/exode-debug.apk build/exode-bin.zip \
+            --prerelease --target "$GITHUB_SHA" \
+            --title "EXODE - version de developpement" \
+            --notes "APK de debogage construit automatiquement depuis main ($GITHUB_SHA). exode-bin.zip contient les bibliotheques natives a copier dans game/bin pour ouvrir le projet dans l'editeur Godot."

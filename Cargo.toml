@@ -1,0 +1,21 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/exode-core",
+    "crates/exode-bench",
+    "crates/exode-godot",
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "UNLICENSED"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
+panic = "abort"
+
+[profile.dev.package."*"]
+opt-level = 2

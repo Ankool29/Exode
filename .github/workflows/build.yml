@@ -103,9 +103,11 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@v3
-      - name: Outils Android
-        run: sdkmanager "platform-tools" "build-tools;34.0.0" "platforms;android-34"
+      - name: Outils Android (SDK preinstalle sur les machines GitHub)
+        run: |
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK_ROOT"
+          yes | "$ANDROID_SDK_ROOT/cmdline-tools/latest/bin/sdkmanager" "platform-tools" "build-tools;34.0.0" "platforms;android-34" > /dev/null
+          ls "$ANDROID_SDK_ROOT/build-tools"
       - name: Godot et modeles d'export
         run: |
           wget -q https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip

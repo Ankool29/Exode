@@ -1,12 +1,23 @@
 {
   "id": "ent_four-01_v1",
   "proto": "four",
-  "source": "EXODE Four Pionnier V3 (palette locale de 60 couleurs, palette commune a valider)",
-  "footprint_tiles": [2, 2],
-  "canvas_px": [128, 160],
-  "anchor_px": [64, 96],
+  "source": "EXODE P0 Pionnier V2 (palette commune candidate de 64 couleurs)",
+  "footprint_tiles": [
+    2,
+    2
+  ],
+  "canvas_px": [
+    128,
+    160
+  ],
+  "anchor_px": [
+    64,
+    96
+  ],
   "base": "ent_four-01_v1.png",
   "shadow": "ent_four-01_v1_shadow.png",
+  "state": "ent_four-01_v1_state.png",
+  "ports": true,
   "glow": "ent_four-01_v1_glow.png",
   "part_frames": [
     "ent_four-01_v1_part-feu_00.png",
@@ -19,8 +30,13 @@
     "res://assets/sprites/fx/fx_fumee_00.png",
     "res://assets/sprites/fx/fx_fumee_01.png",
     "res://assets/sprites/fx/fx_fumee_02.png",
-    "res://assets/sprites/fx/fx_fumee_03.png"
+    "res://assets/sprites/fx/fx_fumee_03.png",
+    "res://assets/sprites/fx/fx_fumee_04.png",
+    "res://assets/sprites/fx/fx_fumee_05.png"
   ],
-  "smoke_origin_px": [92, 40],
+  "smoke_origin_px": [
+    92,
+    40
+  ],
   "map_color": "#5a4a44"
 }

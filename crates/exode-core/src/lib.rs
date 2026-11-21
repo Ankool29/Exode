@@ -3,6 +3,9 @@
 //! Independant de tout moteur graphique. Calculs en entiers, ordre de traitement stable,
 //! empreinte d'etat pour verifier le determinisme (cahier de conception v0.4, sections 8 et 9).
 
+pub mod belts;
+#[cfg(test)]
+mod belts_ref;
 pub mod content;
 pub mod entity;
 pub mod geom;
@@ -17,3 +20,5 @@ pub use sim::{Command, Simulation, TICKS_PER_SECOND};
 
 #[cfg(test)]
 mod tests;
+#[cfg(test)]
+mod tests_belts;

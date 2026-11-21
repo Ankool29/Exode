@@ -34,38 +34,15 @@ pub enum Feed {
     Side(EntityId, u8),
 }
 
+/// Convoyeur. Les objets ne sont pas ici : ils sont regroupes par lignes de transport
+/// (`belts.rs`) et lus case par case avec `Simulation::belt_lanes`.
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Belt {
-    /// Voie 0 = gauche dans le sens de marche, voie 1 = droite.
-    /// Objets tries de l'avant (pos la plus grande) vers l'arriere.
-    pub lanes: [Vec<BeltItem>; 2],
     #[serde(skip)]
     pub feed: Feed,
     /// Cote d'entree si ce convoyeur est un virage.
     #[serde(skip)]
     pub curve_from: Option<Dir>,
-}
-
-impl Belt {
-    pub fn rear(&self, lane: usize) -> Option<u32> {
-        self.lanes[lane].last().map(|b| b.pos)
-    }
-    /// Insertion avec controle d'ecart. Renvoie vrai si l'objet a ete pose.
-    pub fn insert_at(&mut self, lane: usize, item: ItemId, pos: u32) -> bool {
-        let l = &mut self.lanes[lane];
-        let idx = l.iter().position(|b| b.pos < pos).unwrap_or(l.len());
-        if idx > 0 && l[idx - 1].pos < pos + SPACING {
-            return false;
-        }
-        if idx < l.len() && l[idx].pos + SPACING > pos {
-            return false;
-        }
-        l.insert(idx, BeltItem { item, pos });
-        true
-    }
-    pub fn count(&self) -> usize {
-        self.lanes[0].len() + self.lanes[1].len()
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]

@@ -14,10 +14,16 @@ fn item(s: &Simulation, k: &str) -> u16 {
     s.content.item(k).unwrap()
 }
 
-fn belt<'a>(s: &'a Simulation, x: i32, y: i32) -> &'a Belt {
-    match &s.entity_at(Pos::new(x, y)).unwrap().data {
-        Data::Belt(b) => b,
-        _ => panic!("pas un convoyeur"),
+/// Objets d'un convoyeur, voie par voie.
+struct Lanes {
+    lanes: [Vec<BeltItem>; 2],
+}
+
+fn belt(s: &Simulation, x: i32, y: i32) -> Lanes {
+    let e = s.entity_at(Pos::new(x, y)).unwrap();
+    assert!(matches!(e.data, Data::Belt(_)), "pas un convoyeur");
+    Lanes {
+        lanes: s.belt_lanes(e.id),
     }
 }
 

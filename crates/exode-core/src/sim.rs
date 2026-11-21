@@ -4,10 +4,11 @@
 //! 1. calcul de la satisfaction electrique a partir des demandes du tick precedent ;
 //! 2. foreuses et machines (ordre des identifiants) ;
 //! 3. bras mecaniques (ordre des identifiants) ;
-//! 4. convoyeurs, de l'aval vers l'amont.
+//! 4. convoyeurs, de l'aval vers l'amont, regroupes en lignes de transport (`belts.rs`).
 //!
 //! Les commandes du joueur s'appliquent entre deux ticks, dans l'ordre ou elles arrivent.
 
+use crate::belts::{self, BeltBackend, LineBelts, Topology};
 use crate::content::{Content, ItemId, ProtoId, ProtoKind, RecipeId};
 use crate::entity::*;
 use crate::geom::{Dir, Pos};
@@ -19,7 +20,9 @@ use std::hash::BuildHasherDefault;
 /// Rythme provisoire de simulation (v0.4, decision 04 [P]).
 pub const TICKS_PER_SECOND: u32 = 30;
 pub const SAVE_MAGIC: &[u8; 4] = b"EXOD";
-pub const SAVE_VERSION: u32 = 1;
+/// Version 2 : objets des convoyeurs ranges a part, case par case (lignes de transport).
+/// Les sauvegardes de version 1 sont converties au chargement.
+pub const SAVE_VERSION: u32 = 2;
 
 /// Hacheur deterministe (FNV-1a) pour les tables de recherche. Ces tables ne sont jamais
 /// parcourues : l'ordre de traitement vient toujours des BTreeMap.
@@ -42,7 +45,7 @@ impl std::hash::Hasher for Fnv {
         self.0 = h;
     }
 }
-type FastMap<K, V> = HashMap<K, V, BuildHasherDefault<Fnv>>;
+pub(crate) type FastMap<K, V> = HashMap<K, V, BuildHasherDefault<Fnv>>;
 
 pub fn fnv64(bytes: &[u8]) -> u64 {
     let mut h: u64 = 0xcbf2_9ce4_8422_2325;
@@ -91,14 +94,124 @@ struct PowerNet {
     satisfaction: u32,
 }
 
+/// Objets d'un convoyeur dans la sauvegarde : voie gauche, voie droite, de l'avant vers l'arriere.
+type BeltLanes = [Vec<BeltItem>; 2];
+
 #[derive(Serialize, Deserialize)]
 struct SaveState {
     params: WorldParams,
     tick: u64,
     next_id: EntityId,
     entities: Vec<Entity>,
+    /// Convoyeurs non vides, dans l'ordre des identifiants.
+    belt_items: Vec<(EntityId, BeltLanes)>,
     chunks: Vec<((i32, i32), crate::world::Chunk)>,
     stats: Stats,
+}
+
+/// Format de la version 1 (lecture seule) : les objets etaient dans les donnees du convoyeur.
+mod v1 {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct SaveState {
+        pub params: WorldParams,
+        pub tick: u64,
+        pub next_id: EntityId,
+        pub entities: Vec<Entity>,
+        pub chunks: Vec<((i32, i32), crate::world::Chunk)>,
+        pub stats: Stats,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Belt {
+        pub lanes: BeltLanes,
+    }
+
+    /// Meme ordre de variantes que `Data` (bincode les numerote).
+    #[derive(Deserialize)]
+    pub enum Data {
+        Belt(Belt),
+        Inserter(Inserter),
+        Drill(Drill),
+        Machine(Machine),
+        Storage(Storage),
+        Pole,
+        Generator,
+    }
+
+    #[derive(Deserialize)]
+    pub struct Entity {
+        pub id: EntityId,
+        pub proto: ProtoId,
+        pub pos: Pos,
+        pub dir: Dir,
+        pub w: i32,
+        pub h: i32,
+        pub data: Data,
+        pub status: Status,
+        pub wants_power: bool,
+    }
+
+    /// Conversion vers le format courant.
+    pub fn convert(st: SaveState) -> super::SaveState {
+        let mut entities = Vec::with_capacity(st.entities.len());
+        let mut belt_items = Vec::new();
+        for e in st.entities {
+            let data = match e.data {
+                Data::Belt(b) => {
+                    if !b.lanes[0].is_empty() || !b.lanes[1].is_empty() {
+                        belt_items.push((e.id, b.lanes));
+                    }
+                    super::Data::Belt(super::Belt::default())
+                }
+                Data::Inserter(x) => super::Data::Inserter(x),
+                Data::Drill(x) => super::Data::Drill(x),
+                Data::Machine(x) => super::Data::Machine(x),
+                Data::Storage(x) => super::Data::Storage(x),
+                Data::Pole => super::Data::Pole,
+                Data::Generator => super::Data::Generator,
+            };
+            entities.push(super::Entity {
+                id: e.id,
+                proto: e.proto,
+                pos: e.pos,
+                dir: e.dir,
+                w: e.w,
+                h: e.h,
+                data,
+                status: e.status,
+                wants_power: e.wants_power,
+            });
+        }
+        super::SaveState {
+            params: st.params,
+            tick: st.tick,
+            next_id: st.next_id,
+            entities,
+            belt_items,
+            chunks: st.chunks,
+            stats: st.stats,
+        }
+    }
+}
+
+/// Representation des objets sur les convoyeurs.
+enum BeltStore {
+    Lines(LineBelts),
+    /// Ancienne simulation case par case, pour le test d'equivalence.
+    #[cfg(test)]
+    Reference(crate::belts_ref::RefBelts),
+}
+
+macro_rules! belts {
+    ($store:expr, $b:ident => $e:expr) => {
+        match $store {
+            BeltStore::Lines($b) => $e,
+            #[cfg(test)]
+            BeltStore::Reference($b) => $e,
+        }
+    };
 }
 
 pub struct Simulation {
@@ -109,13 +222,21 @@ pub struct Simulation {
     entities: BTreeMap<EntityId, Entity>,
     occ: FastMap<Pos, EntityId>,
     pub stats: Stats,
+    belts: BeltStore,
+    /// Objets lus dans une sauvegarde, poses a la prochaine reconstruction des lignes.
+    pending_belt_items: Vec<(EntityId, BeltLanes)>,
     // caches
-    belt_order: Vec<EntityId>,
     belts_dirty: bool,
     power_dirty: bool,
     nets: Vec<PowerNet>,
     net_of: FastMap<EntityId, usize>,
     pole_links: Vec<(EntityId, EntityId)>,
+    /// Entites raccordees hors poteaux : (id, reseau, puissance, generateur).
+    powered: Vec<(EntityId, usize, u64, bool)>,
+    /// Foreuses et machines, puis bras, dans l'ordre des identifiants.
+    lists_dirty: bool,
+    producer_ids: Vec<EntityId>,
+    inserter_ids: Vec<EntityId>,
 }
 
 #[derive(Clone, Copy)]
@@ -163,12 +284,47 @@ impl Simulation {
             entities: BTreeMap::new(),
             occ: FastMap::default(),
             stats: Stats::default(),
-            belt_order: Vec::new(),
+            belts: BeltStore::Lines(LineBelts::new()),
+            pending_belt_items: Vec::new(),
             belts_dirty: true,
             power_dirty: true,
             nets: Vec::new(),
             net_of: FastMap::default(),
             pole_links: Vec::new(),
+            powered: Vec::new(),
+            lists_dirty: true,
+            producer_ids: Vec::new(),
+            inserter_ids: Vec::new(),
+        }
+    }
+
+    /// Remplace les lignes de transport par l'ancienne simulation case par case (tests).
+    #[cfg(test)]
+    pub(crate) fn use_reference_belts(&mut self) {
+        assert_eq!(
+            self.belt_item_count(),
+            0,
+            "a faire avant de poser des objets"
+        );
+        self.belts = BeltStore::Reference(Default::default());
+        self.belts_dirty = true;
+    }
+
+    /// Nombre de rotations de boucles pleines (tests).
+    #[cfg(test)]
+    pub(crate) fn ring_rotations(&self) -> u64 {
+        match &self.belts {
+            BeltStore::Lines(l) => l.ring_rotations,
+            BeltStore::Reference(_) => 0,
+        }
+    }
+
+    /// Lignes de transport (diagnostic) : (lignes, voies eveillees).
+    pub fn belt_line_stats(&self) -> (usize, usize) {
+        match &self.belts {
+            BeltStore::Lines(l) => (l.line_count(), l.awake_lanes()),
+            #[cfg(test)]
+            BeltStore::Reference(_) => (0, 0),
         }
     }
 
@@ -279,8 +435,11 @@ impl Simulation {
             self.occ.insert(t, id);
         }
         self.entities.insert(id, e);
-        self.belts_dirty = true;
+        if kind == ProtoKind::Belt {
+            self.belts_dirty = true;
+        }
         self.power_dirty = true;
+        self.lists_dirty = true;
         Ok(id)
     }
 
@@ -306,8 +465,14 @@ impl Simulation {
             self.occ.remove(&t);
         }
         self.stats.mass_removed += self.entity_mass(&e);
-        self.belts_dirty = true;
+        if matches!(e.data, Data::Belt(_)) {
+            let items = belts!(&mut self.belts, b => b.remove_tile(id));
+            let c = &self.content;
+            self.stats.mass_removed += items.iter().map(|i| c.items[*i as usize].mass).sum::<u64>();
+            self.belts_dirty = true;
+        }
         self.power_dirty = true;
+        self.lists_dirty = true;
         true
     }
 
@@ -320,7 +485,9 @@ impl Simulation {
             return false;
         }
         e.dir = e.dir.cw();
-        self.belts_dirty = true;
+        if matches!(e.data, Data::Belt(_)) {
+            self.belts_dirty = true;
+        }
         true
     }
 
@@ -400,28 +567,40 @@ impl Simulation {
         let Some(id) = self.occ.get(&p).copied() else {
             return false;
         };
-        let ok = match &mut self.entities.get_mut(&id).unwrap().data {
-            Data::Belt(b) => b.insert_at(lane, item, pos.min(LANE_LEN)),
-            _ => false,
-        };
+        if !matches!(self.entities[&id].data, Data::Belt(_)) {
+            return false;
+        }
+        self.refresh_belts();
+        let ok = belts!(&mut self.belts, b => b.insert_at(id, lane, item, pos.min(LANE_LEN)));
         if ok {
             self.stats.mass_extracted += self.content.items[item as usize].mass;
         }
         ok
     }
 
+    /// Retire l'objet le plus en avant d'un convoyeur, compte comme retire (tests).
+    #[cfg(test)]
+    pub(crate) fn debug_take_from_belt(&mut self, id: EntityId) -> Option<ItemId> {
+        self.refresh_belts();
+        let it = belts!(&mut self.belts, b => b.take(id, &|_| true))?;
+        self.stats.mass_removed += self.content.items[it as usize].mass;
+        Some(it)
+    }
+
     /// Nombre total d'objets sur les convoyeurs.
     pub fn belt_item_count(&self) -> usize {
-        self.entities
-            .values()
-            .map(|e| {
-                if let Data::Belt(b) = &e.data {
-                    b.count()
-                } else {
-                    0
-                }
-            })
-            .sum()
+        belts!(&self.belts, b => b.item_count())
+    }
+
+    /// Objets d'un convoyeur : voie gauche, voie droite, de l'avant vers l'arriere.
+    pub fn belt_lanes(&self, id: EntityId) -> [Vec<BeltItem>; 2] {
+        belts!(&self.belts, b => b.lanes(id))
+    }
+
+    /// Objets des convoyeurs demandes : (convoyeur, voie, objet). Chaque ligne de transport
+    /// n'est parcourue qu'une fois (affichage de la zone visible).
+    pub fn visit_belt_items(&self, ids: &[EntityId], mut f: impl FnMut(EntityId, usize, BeltItem)) {
+        belts!(&self.belts, b => b.visit(ids, &mut f))
     }
 
     // ------------------------------------------------------------------ bilan matiere
@@ -430,7 +609,8 @@ impl Simulation {
         let c = &self.content;
         let m = |i: ItemId| c.items[i as usize].mass;
         match &e.data {
-            Data::Belt(b) => b.lanes.iter().flatten().map(|it| m(it.item)).sum(),
+            // objets des convoyeurs : comptes a part (lignes de transport)
+            Data::Belt(_) => 0,
             Data::Inserter(ins) => ins.held.map(m).unwrap_or(0),
             Data::Drill(d) => d.buffer.map(m).unwrap_or(0),
             Data::Machine(mc) => {
@@ -457,7 +637,14 @@ impl Simulation {
 
     /// Masse de matiere presente dans les installations (grammes).
     pub fn mass_in_world(&self) -> u64 {
-        self.entities.values().map(|e| self.entity_mass(e)).sum()
+        let c = &self.content;
+        let mut belt_mass = 0u64;
+        belts!(&self.belts, b => b.for_each_item(&mut |i| belt_mass += c.items[i as usize].mass));
+        self.entities
+            .values()
+            .map(|e| self.entity_mass(e))
+            .sum::<u64>()
+            + belt_mass
     }
 
     /// Bilan de conservation : extrait = present + perdu + retire.
@@ -520,6 +707,7 @@ impl Simulation {
             self.net_of.insert(p.0, pole_net[i]);
         }
         // raccordement des autres entites : premier poteau (ordre des id) dont la zone touche l'emprise
+        self.powered.clear();
         for e in self.entities.values() {
             let pk = &self.content.protos[e.proto as usize];
             let consumer = pk.power > 0 && pk.kind != ProtoKind::Pole;
@@ -535,6 +723,12 @@ impl Simulation {
                     && e.pos.y + e.h - 1 >= y0;
                 if overlap {
                     self.net_of.insert(e.id, pole_net[i]);
+                    self.powered.push((
+                        e.id,
+                        pole_net[i],
+                        pk.power,
+                        pk.kind == ProtoKind::Generator,
+                    ));
                     break;
                 }
             }
@@ -547,19 +741,12 @@ impl Simulation {
             n.supply = 0;
             n.demand = 0;
         }
-        for e in self.entities.values() {
-            let Some(&net) = self.net_of.get(&e.id) else {
-                continue;
-            };
-            let pk = &self.content.protos[e.proto as usize];
-            match pk.kind {
-                ProtoKind::Generator => self.nets[net].supply += pk.power,
-                ProtoKind::Pole => {}
-                _ => {
-                    if e.wants_power {
-                        self.nets[net].demand += pk.power;
-                    }
-                }
+        // entites raccordees seulement (les poteaux ne consomment rien)
+        for &(id, net, power, generator) in &self.powered {
+            if generator {
+                self.nets[net].supply += power;
+            } else if self.entities[&id].wants_power {
+                self.nets[net].demand += power;
             }
         }
         for n in &mut self.nets {
@@ -644,7 +831,7 @@ impl Simulation {
         let auto_recipe = auto.and_then(|cat| self.content.auto_recipe_for(&cat, item));
         let e = self.entities.get_mut(&id).unwrap();
         match &mut e.data {
-            Data::Belt(b) => {
+            Data::Belt(_) => {
                 let bd = e.dir;
                 // voie eloignee de la source, comme un bras qui depose de l'autre cote
                 let from_side = approach.opposite();
@@ -657,7 +844,8 @@ impl Simulation {
                 } else {
                     0
                 };
-                b.insert_at(lane, item, MID)
+                self.refresh_belts();
+                belts!(&mut self.belts, b => b.insert_at(id, lane, item, MID))
             }
             Data::Storage(st) => {
                 st.add(item, 1);
@@ -684,25 +872,16 @@ impl Simulation {
     /// Regle provisoire des dechets [R] : depuis une machine, un bras ne met des dechets
     /// que dans une benne ou sur un convoyeur ; un coffre ordinaire ne recoit que des produits.
     fn take_from(&mut self, id: EntityId, want: &Want, target: TargetKind) -> Option<ItemId> {
+        if matches!(self.entities.get(&id)?.data, Data::Belt(_)) {
+            // objet le plus en avant accepte, voie 0 prioritaire en cas d'egalite
+            self.refresh_belts();
+            let content = &self.content;
+            return belts!(&mut self.belts, b => b.take(id, &|i| want.accepts(i, content)));
+        }
         let content = &self.content;
         let e = self.entities.get_mut(&id)?;
         match &mut e.data {
-            Data::Belt(b) => {
-                // objet le plus en avant accepte, voie 0 prioritaire en cas d'egalite
-                let mut best: Option<(u32, usize, usize)> = None;
-                for lane in 0..2 {
-                    for (idx, it) in b.lanes[lane].iter().enumerate() {
-                        if want.accepts(it.item, content) {
-                            if best.map(|bb| it.pos > bb.0).unwrap_or(true) {
-                                best = Some((it.pos, lane, idx));
-                            }
-                            break;
-                        }
-                    }
-                }
-                let (_, lane, idx) = best?;
-                Some(b.lanes[lane].remove(idx).item)
-            }
+            Data::Belt(_) => None,
             Data::Storage(st) => {
                 let item = st
                     .items
@@ -752,21 +931,41 @@ impl Simulation {
 
     pub fn step(&mut self) {
         self.update_power();
-        let ids: Vec<EntityId> = self.entities.keys().copied().collect();
-        for &id in &ids {
+        self.refresh_lists();
+        self.refresh_belts();
+        let producers = std::mem::take(&mut self.producer_ids);
+        for &id in &producers {
             match self.entities[&id].data {
                 Data::Drill(_) => self.update_drill(id),
                 Data::Machine(_) => self.update_machine(id),
                 _ => {}
             }
         }
-        for &id in &ids {
-            if matches!(self.entities[&id].data, Data::Inserter(_)) {
-                self.update_inserter(id);
-            }
+        self.producer_ids = producers;
+        let inserters = std::mem::take(&mut self.inserter_ids);
+        for &id in &inserters {
+            self.update_inserter(id);
         }
+        self.inserter_ids = inserters;
         self.update_belts();
         self.tick += 1;
+    }
+
+    /// Listes des entites actives, dans l'ordre des identifiants.
+    fn refresh_lists(&mut self) {
+        if !self.lists_dirty {
+            return;
+        }
+        self.lists_dirty = false;
+        self.producer_ids.clear();
+        self.inserter_ids.clear();
+        for e in self.entities.values() {
+            match e.data {
+                Data::Drill(_) | Data::Machine(_) => self.producer_ids.push(e.id),
+                Data::Inserter(_) => self.inserter_ids.push(e.id),
+                _ => {}
+            }
+        }
     }
 
     pub fn run(&mut self, ticks: u64) {
@@ -1039,209 +1238,63 @@ impl Simulation {
         matches!(e.data, Data::Belt(_)).then_some((id, e.dir))
     }
 
+    /// Recalcule la topologie et les lignes de transport apres une pose, un retrait ou une
+    /// rotation de convoyeur. Les objets de chaque case sont conserves.
     fn refresh_belts(&mut self) {
         if !self.belts_dirty {
             return;
         }
         self.belts_dirty = false;
-        let belts: Vec<(EntityId, Pos, Dir)> = self
+        let belts: Vec<(EntityId, Pos, Dir, u32)> = self
             .entities
             .values()
             .filter(|e| matches!(e.data, Data::Belt(_)))
-            .map(|e| (e.id, e.pos, e.dir))
+            .map(|e| {
+                (
+                    e.id,
+                    e.pos,
+                    e.dir,
+                    self.content.protos[e.proto as usize].speed,
+                )
+            })
             .collect();
-        // 1. virages
-        let mut curve: BTreeMap<EntityId, Option<Dir>> = BTreeMap::new();
-        for &(id, p, d) in &belts {
-            let back = self
-                .belt_at(p.step(d.opposite()))
-                .map(|(_, bd)| bd == d)
-                .unwrap_or(false);
-            let from_left = self
-                .belt_at(p.step(d.left()))
-                .map(|(_, bd)| bd == d.right())
-                .unwrap_or(false);
-            let from_right = self
-                .belt_at(p.step(d.right()))
-                .map(|(_, bd)| bd == d.left())
-                .unwrap_or(false);
-            let c = if !back && from_left && !from_right {
-                Some(d.left())
-            } else if !back && from_right && !from_left {
-                Some(d.right())
-            } else {
-                None
-            };
-            curve.insert(id, c);
-        }
-        // 2. sorties
-        let mut feed: BTreeMap<EntityId, Feed> = BTreeMap::new();
-        let mut upstream: BTreeMap<EntityId, Vec<EntityId>> = BTreeMap::new();
-        for &(id, p, d) in &belts {
-            let f = match self.belt_at(p.step(d)) {
-                Some((nid, nd)) if nd != d.opposite() => {
-                    if nd == d || curve[&nid] == Some(d.opposite()) {
-                        Feed::Same(nid)
-                    } else {
-                        let side = d.opposite();
-                        Feed::Side(nid, if side == nd.left() { 0 } else { 1 })
-                    }
-                }
-                _ => Feed::None,
-            };
-            if let Feed::Same(n) | Feed::Side(n, _) = f {
-                upstream.entry(n).or_default().push(id);
-            }
-            feed.insert(id, f);
-        }
+        let topo: Topology = belts::topology(belts, |p| self.belt_at(p));
         for (id, e) in self.entities.iter_mut() {
             if let Data::Belt(b) = &mut e.data {
-                b.feed = feed[id];
-                b.curve_from = curve[id];
+                b.feed = topo.feed[id];
+                b.curve_from = topo.curve[id];
             }
         }
-        // 3. ordre aval -> amont, cycles reperes
-        let mut order = Vec::with_capacity(belts.len());
-        let mut seen: BTreeMap<EntityId, bool> = BTreeMap::new();
-        let push_upstream =
-            |start: EntityId, order: &mut Vec<EntityId>, seen: &mut BTreeMap<EntityId, bool>| {
-                let mut queue = std::collections::VecDeque::new();
-                queue.push_back(start);
-                seen.insert(start, true);
-                while let Some(b) = queue.pop_front() {
-                    order.push(b);
-                    if let Some(ups) = upstream.get(&b) {
-                        for &u in ups {
-                            if !seen.contains_key(&u) {
-                                seen.insert(u, true);
-                                queue.push_back(u);
-                            }
-                        }
-                    }
-                }
-            };
-        for &(id, _, _) in &belts {
-            if feed[&id] == Feed::None && !seen.contains_key(&id) {
-                push_upstream(id, &mut order, &mut seen);
+        let pending = std::mem::take(&mut self.pending_belt_items);
+        belts!(&mut self.belts, b => {
+            for (id, lanes) in pending {
+                b.seed(id, lanes);
             }
-        }
-        for &(id, _, _) in &belts {
-            if seen.contains_key(&id) {
-                continue;
-            }
-            // remonte vers l'aval jusqu'a boucler : le premier noeud revu est la tete du cycle
-            let mut walk: Vec<EntityId> = Vec::new();
-            let mut cur = id;
-            let head = loop {
-                if let Some(i) = walk.iter().position(|&w| w == cur) {
-                    break walk[i];
-                }
-                if seen.contains_key(&cur) {
-                    break cur;
-                }
-                walk.push(cur);
-                cur = match feed[&cur] {
-                    Feed::Same(n) | Feed::Side(n, _) => n,
-                    Feed::None => cur,
-                };
-            };
-            if !seen.contains_key(&head) {
-                push_upstream(head, &mut order, &mut seen);
-            }
-        }
-        self.belt_order = order;
+            b.rebuild(&topo);
+        });
     }
 
     fn update_belts(&mut self) {
         self.refresh_belts();
-        let order = std::mem::take(&mut self.belt_order);
-        for &id in &order {
-            for lane in 0..2 {
-                self.move_lane(id, lane);
-            }
-        }
-        self.belt_order = order;
-    }
-
-    /// Deplace les objets d'une voie. Traitement de l'aval vers l'amont : la case suivante
-    /// a deja bouge, ce qui permet a une ligne compacte d'avancer d'un seul bloc.
-    ///
-    /// Limite connue (a traiter au banc F1) : une boucle fermee remplie a 100 %, sans
-    /// aucun vide, reste immobile ; des qu'il manque un objet, elle circule.
-    fn move_lane(&mut self, id: EntityId, lane: usize) {
-        let speed = {
-            let e = &self.entities[&id];
-            self.content.protos[e.proto as usize].speed
-        };
-        let feed = match &self.entities[&id].data {
-            Data::Belt(b) if !b.lanes[lane].is_empty() => b.feed,
-            _ => return,
-        };
-        // limite de l'objet de tete, dans le repere de cette case (peut depasser LANE_LEN)
-        let (limit, target_lane, next) = match feed {
-            Feed::Same(n) => {
-                let q = match &self.entities[&n].data {
-                    Data::Belt(nb) => nb.rear(lane),
-                    _ => None,
-                };
-                let lim = match q {
-                    Some(q) => LANE_LEN + q - SPACING,
-                    None => LANE_LEN + speed,
-                };
-                (lim, lane, Some(n))
-            }
-            Feed::Side(n, l) => (LANE_LEN, l as usize, Some(n)),
-            Feed::None => (LANE_LEN, lane, None),
-        };
-        let mut transferred: Option<(ItemId, u32)> = None;
-        {
-            let Data::Belt(b) = &mut self.entities.get_mut(&id).unwrap().data else {
-                return;
-            };
-            let items = &mut b.lanes[lane];
-            let mut ahead = limit as i64;
-            let mut drop_front = false;
-            for (k, it) in items.iter_mut().enumerate() {
-                let mut target = (it.pos as i64 + speed as i64).min(ahead).max(it.pos as i64);
-                if k == 0 && target > LANE_LEN as i64 && matches!(feed, Feed::Same(_)) {
-                    transferred = Some((it.item, (target - LANE_LEN as i64) as u32));
-                    drop_front = true;
-                } else {
-                    target = target.min(LANE_LEN as i64);
-                    it.pos = target as u32;
-                }
-                ahead = target - SPACING as i64;
-            }
-            if drop_front {
-                items.remove(0);
-            }
-        }
-        if let (Some((item, entry)), Some(n)) = (transferred, next) {
-            if let Data::Belt(nb) = &mut self.entities.get_mut(&n).unwrap().data {
-                nb.lanes[target_lane].push(BeltItem { item, pos: entry });
-            }
-        }
-        // insertion laterale : l'objet de tete attend en bout de case
-        if let Feed::Side(n, l) = feed {
-            let front = match &self.entities[&id].data {
-                Data::Belt(b) => b.lanes[lane].first().copied(),
-                _ => None,
-            };
-            if let Some(f) = front.filter(|f| f.pos >= LANE_LEN) {
-                let ok = match &mut self.entities.get_mut(&n).unwrap().data {
-                    Data::Belt(nb) => nb.insert_at(l as usize, f.item, MID),
-                    _ => false,
-                };
-                if ok {
-                    if let Data::Belt(b) = &mut self.entities.get_mut(&id).unwrap().data {
-                        b.lanes[lane].remove(0);
-                    }
-                }
-            }
-        }
+        belts!(&mut self.belts, b => b.step());
     }
 
     // ------------------------------------------------------------------ sauvegarde
+
+    /// Objets de tous les convoyeurs non vides, dans l'ordre des identifiants.
+    fn belt_items_by_tile(&self) -> Vec<(EntityId, BeltLanes)> {
+        let ids: Vec<EntityId> = self
+            .entities
+            .values()
+            .filter(|e| matches!(e.data, Data::Belt(_)))
+            .map(|e| e.id)
+            .collect();
+        let mut by_id: BTreeMap<EntityId, BeltLanes> = BTreeMap::new();
+        self.visit_belt_items(&ids, |id, lane, it| {
+            by_id.entry(id).or_default()[lane].push(it)
+        });
+        by_id.into_iter().collect()
+    }
 
     fn save_state(&self) -> SaveState {
         SaveState {
@@ -1249,6 +1302,7 @@ impl Simulation {
             tick: self.tick,
             next_id: self.next_id,
             entities: self.entities.values().cloned().collect(),
+            belt_items: self.belt_items_by_tile(),
             chunks: self
                 .world
                 .modified_chunks()
@@ -1272,12 +1326,19 @@ impl Simulation {
             return Err("fichier de sauvegarde invalide".into());
         }
         let version = u32::from_le_bytes(bytes[4..8].try_into().unwrap());
-        if version != SAVE_VERSION {
-            return Err(format!(
-                "version de sauvegarde {version} non prise en charge"
-            ));
-        }
-        let st: SaveState = bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
+        let st: SaveState = match version {
+            1 => {
+                let old: v1::SaveState =
+                    bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
+                v1::convert(old)
+            }
+            SAVE_VERSION => bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?,
+            _ => {
+                return Err(format!(
+                    "version de sauvegarde {version} non prise en charge"
+                ))
+            }
+        };
         if st.params.generator_version != GENERATOR_VERSION {
             return Err(format!(
                 "generateur v{} requis",
@@ -1301,8 +1362,11 @@ impl Simulation {
             }
             sim.entities.insert(e.id, e);
         }
+        sim.pending_belt_items = st.belt_items;
         sim.belts_dirty = true;
         sim.power_dirty = true;
+        sim.lists_dirty = true;
+        sim.refresh_belts();
         // Les demandes d'energie sont dans l'etat sauvegarde : le reseau se reconstruit a l'identique.
         Ok(sim)
     }

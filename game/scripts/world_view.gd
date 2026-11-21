@@ -403,7 +403,7 @@ func _draw_terrain(r: Rect2i) -> void:
 	var feats := []
 	for cy in range(cy0, cy1 + 1):
 		for cx in range(cx0, cx1 + 1):
-			var data: PackedByteArray = _chunk_data.get(Vector2i(cx, cy), PackedByteArray())
+			var data: PackedByteArray = _chunk_bytes(Vector2i(cx, cy))
 			if data.is_empty():
 				continue
 			for i in CHUNK * CHUNK:

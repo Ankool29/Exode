@@ -1,0 +1,251 @@
+{
+  "id": "net_chaudiere-01_v3",
+  "proto": "chaudiere",
+  "source": "EXODE etape 3 reseaux V3",
+  "directions": {
+    "n": {
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "canvas_px": [
+        128,
+        224
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "base": "net_chaudiere-01_v3_n.png",
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          64,
+          37
+        ]
+      ],
+      "shadow": "net_chaudiere-01_v3_n_shadow.png",
+      "state": "net_chaudiere-01_v3_n_state.png",
+      "glow": "net_chaudiere-01_v3_n_glow.png",
+      "part_frames": [
+        "net_chaudiere-01_v3_n_part-fire_00.png",
+        "net_chaudiere-01_v3_n_part-fire_01.png",
+        "net_chaudiere-01_v3_n_part-fire_02.png",
+        "net_chaudiere-01_v3_n_part-fire_03.png"
+      ],
+      "part_ticks_per_frame": 5,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_fumee_00.png",
+        "res://assets/sprites/fx/fx_fumee_01.png",
+        "res://assets/sprites/fx/fx_fumee_02.png",
+        "res://assets/sprites/fx/fx_fumee_03.png",
+        "res://assets/sprites/fx/fx_fumee_04.png",
+        "res://assets/sprites/fx/fx_fumee_05.png"
+      ],
+      "smoke_origin_px": [
+        64,
+        37
+      ]
+    },
+    "e": {
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "canvas_px": [
+        192,
+        160
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "base": "net_chaudiere-01_v3_e.png",
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          96,
+          37
+        ]
+      ],
+      "shadow": "net_chaudiere-01_v3_e_shadow.png",
+      "state": "net_chaudiere-01_v3_e_state.png",
+      "glow": "net_chaudiere-01_v3_e_glow.png",
+      "part_frames": [
+        "net_chaudiere-01_v3_e_part-fire_00.png",
+        "net_chaudiere-01_v3_e_part-fire_01.png",
+        "net_chaudiere-01_v3_e_part-fire_02.png",
+        "net_chaudiere-01_v3_e_part-fire_03.png"
+      ],
+      "part_ticks_per_frame": 5,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_fumee_00.png",
+        "res://assets/sprites/fx/fx_fumee_01.png",
+        "res://assets/sprites/fx/fx_fumee_02.png",
+        "res://assets/sprites/fx/fx_fumee_03.png",
+        "res://assets/sprites/fx/fx_fumee_04.png",
+        "res://assets/sprites/fx/fx_fumee_05.png"
+      ],
+      "smoke_origin_px": [
+        96,
+        37
+      ]
+    },
+    "s": {
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "canvas_px": [
+        128,
+        224
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "base": "net_chaudiere-01_v3_s.png",
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          64,
+          37
+        ]
+      ],
+      "shadow": "net_chaudiere-01_v3_s_shadow.png",
+      "state": "net_chaudiere-01_v3_s_state.png",
+      "glow": "net_chaudiere-01_v3_s_glow.png",
+      "part_frames": [
+        "net_chaudiere-01_v3_s_part-fire_00.png",
+        "net_chaudiere-01_v3_s_part-fire_01.png",
+        "net_chaudiere-01_v3_s_part-fire_02.png",
+        "net_chaudiere-01_v3_s_part-fire_03.png"
+      ],
+      "part_ticks_per_frame": 5,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_fumee_00.png",
+        "res://assets/sprites/fx/fx_fumee_01.png",
+        "res://assets/sprites/fx/fx_fumee_02.png",
+        "res://assets/sprites/fx/fx_fumee_03.png",
+        "res://assets/sprites/fx/fx_fumee_04.png",
+        "res://assets/sprites/fx/fx_fumee_05.png"
+      ],
+      "smoke_origin_px": [
+        64,
+        37
+      ]
+    },
+    "w": {
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "canvas_px": [
+        192,
+        160
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "base": "net_chaudiere-01_v3_w.png",
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          96,
+          37
+        ]
+      ],
+      "shadow": "net_chaudiere-01_v3_w_shadow.png",
+      "state": "net_chaudiere-01_v3_w_state.png",
+      "glow": "net_chaudiere-01_v3_w_glow.png",
+      "part_frames": [
+        "net_chaudiere-01_v3_w_part-fire_00.png",
+        "net_chaudiere-01_v3_w_part-fire_01.png",
+        "net_chaudiere-01_v3_w_part-fire_02.png",
+        "net_chaudiere-01_v3_w_part-fire_03.png"
+      ],
+      "part_ticks_per_frame": 5,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_fumee_00.png",
+        "res://assets/sprites/fx/fx_fumee_01.png",
+        "res://assets/sprites/fx/fx_fumee_02.png",
+        "res://assets/sprites/fx/fx_fumee_03.png",
+        "res://assets/sprites/fx/fx_fumee_04.png",
+        "res://assets/sprites/fx/fx_fumee_05.png"
+      ],
+      "smoke_origin_px": [
+        96,
+        37
+      ]
+    }
+  }
+}

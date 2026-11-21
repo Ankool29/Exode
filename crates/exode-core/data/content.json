@@ -1,5 +1,5 @@
 {
-  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts. Reseaux (etape 3) : portees et capacites de liaison, fluides, volumes et debits PROVISOIRES [O]. Fluides en unites entieres (1 unite = 1 kg).",
+  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts. Reseaux (etape 3) : portees et capacites de liaison, fluides, volumes et debits PROVISOIRES [O]. Fluides en unites entieres (1 unite = 1 kg). Energies thermiques en W x tick (1 W pendant un tick). Combustible et ressource_c PROVISOIRES [O].",
   "items": [
     { "id": "minerai_a",    "name": "Minerai A",      "mass": 1000, "waste": false, "color": "#8c95a3" },
     { "id": "minerai_b",    "name": "Minerai B",      "mass": 1000, "waste": false, "color": "#c0703f" },
@@ -7,7 +7,8 @@
     { "id": "plaque_b",     "name": "Plaque B",       "mass": 750,  "waste": false, "color": "#e08a4c" },
     { "id": "engrenage",    "name": "Engrenage",      "mass": 1250, "waste": false, "color": "#b8bec8" },
     { "id": "scories",      "name": "Scories",        "mass": 1000, "waste": true,  "color": "#6b6a3c" },
-    { "id": "chutes_metal", "name": "Chutes de metal","mass": 250,  "waste": true,  "color": "#7d7a52" }
+    { "id": "chutes_metal", "name": "Chutes de metal","mass": 250,  "waste": true,  "color": "#7d7a52" },
+    { "id": "combustible",  "name": "Combustible",    "mass": 1000, "waste": false, "color": "#3b3330", "fuel": 120000000 }
   ],
   "recipes": [
     { "id": "fonte_a",      "category": "fonte",      "time": 240, "inputs": [["minerai_a", 4]],    "outputs": [["plaque_a", 4], ["scories", 1]] },
@@ -17,11 +18,12 @@
   ],
   "fluids": [
     { "id": "eau",    "name": "Eau",    "mass": 1000, "temperature": 15,  "color": "#3f7fbf" },
-    { "id": "vapeur", "name": "Vapeur", "mass": 1000, "temperature": 165, "color": "#d8dde3" }
+    { "id": "vapeur", "name": "Vapeur", "mass": 1000, "temperature": 165, "color": "#d8dde3", "energy": 900000 }
   ],
   "resources": [
     { "id": "ressource_a", "item": "minerai_a", "color": "#7a8494" },
-    { "id": "ressource_b", "item": "minerai_b", "color": "#a85f33" }
+    { "id": "ressource_b", "item": "minerai_b", "color": "#a85f33" },
+    { "id": "ressource_c", "item": "combustible", "color": "#2f2a28" }
   ],
   "buildings": [
     { "id": "convoyeur",   "name": "Convoyeur",   "kind": "belt",      "size": [1, 1], "power": 0,       "speed": 16 },
@@ -41,6 +43,10 @@
     { "id": "pompe",       "name": "Pompe",       "kind": "pump",      "size": [1, 2], "power": 30000,   "flow_rate": 20 },
     { "id": "vanne",       "name": "Vanne",       "kind": "valve",     "size": [1, 1], "power": 0,       "flow_rate": 30 },
     { "id": "reservoir",   "name": "Reservoir",   "kind": "tank",      "size": [3, 3], "power": 0,       "fluid_capacity": 5000, "flow_rate": 40 },
-    { "id": "pompe_eau",   "name": "Pompe a eau", "kind": "water_pump","size": [1, 2], "power": 0,       "flow_rate": 20 }
+    { "id": "pompe_eau",   "name": "Pompe a eau", "kind": "water_pump","size": [1, 2], "power": 0,       "flow_rate": 20 },
+    { "id": "chaudiere",   "name": "Chaudiere",   "kind": "boiler",    "size": [2, 3], "power": 0,       "capacity": 5, "heat_capacity": 200000, "heat_power": 1800000, "temperature": 500, "heat_limit": 3000000 },
+    { "id": "caloduc",     "name": "Caloduc",     "kind": "heat_pipe", "size": [1, 1], "power": 0,       "heat_capacity": 50000 },
+    { "id": "echangeur",   "name": "Echangeur",   "kind": "exchanger", "size": [2, 3], "power": 0,       "heat_capacity": 200000, "temperature": 165, "heat_limit": 3000000, "flow_rate": 4, "fluid_capacity": 200 },
+    { "id": "turbine",     "name": "Turbine",     "kind": "turbine",   "size": [2, 3], "power": 1800000, "flow_rate": 4, "fluid_capacity": 200 }
   ]
 }

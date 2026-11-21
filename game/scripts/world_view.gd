@@ -71,6 +71,10 @@ const SPRITE_SHEETS := {
 	"pompe_eau": "res://assets/sprites/net/pompe-eau-01/pompe-eau-01.json",
 	"vanne": "res://assets/sprites/net/vanne-01/vanne-01.json",
 	"reservoir": "res://assets/sprites/net/reservoir-01/reservoir-01.json",
+	"caloduc": "res://assets/sprites/net/caloduc-01/caloduc-01.json",
+	"chaudiere": "res://assets/sprites/net/chaudiere-01/chaudiere-01.json",
+	"echangeur": "res://assets/sprites/net/echangeur-01/echangeur-01.json",
+	"turbine": "res://assets/sprites/net/turbine-01/turbine-01.json",
 }
 ## Terrain detaille (a partir de ZOOM_TERRAIN px par case) : grandes textures 256 px
 ## echantillonnees selon la position, rives par masque de cotes N=1, E=2, S=4, W=8.
@@ -225,6 +229,17 @@ func _load_sprites() -> void:
 				lst.append([t, _try_load(SPR + "nat/%s_v%d_shadow.png" % [entry[1], v + 1])])
 		if not lst.is_empty():
 			_nat[entry[0]] = lst
+
+
+## Couleur d'une temperature (degres) : froid sombre, 165 orange, 500 rouge vif.
+func _heat_color(t: int) -> Color:
+	if t <= 15:
+		return Color(0.3, 0.3, 0.35, 0.0)
+	if t < 165:
+		var k := float(t - 15) / 150.0
+		return Color(0.55 + 0.4 * k, 0.35 + 0.2 * k, 0.2, 0.25 + 0.5 * k)
+	var k2 := clampf(float(t - 165) / 335.0, 0.0, 1.0)
+	return Color(0.95, 0.55 - 0.35 * k2, 0.15, 0.75 + 0.25 * k2)
 
 
 ## Fiche de sprite (une orientation) : textures et reperes.
@@ -651,8 +666,12 @@ func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d:
 	var rect := Rect2(tl, sp.canvas * sc)
 	var kind := proto_kinds[proto]
 	if sp.has("masks"):
-		# conduite : piece selon le masque des voisins raccordes
-		draw_texture_rect(sp.masks[clampi(e1, 0, 15)], rect, false)
+		# conduite ou caloduc : piece selon le masque des voisins raccordes
+		var m := clampi(e1, 0, 15)
+		draw_texture_rect(sp.masks[m], rect, false)
+		if kind == "heat_pipe" and m < sp.niveau_masks.size():
+			# niveau teinte selon la temperature
+			draw_texture_rect(sp.niveau_masks[m], rect, false, _heat_color(e2))
 		if id == selected_id:
 			draw_rect(Rect2(tile_to_screen(x, y), Vector2(w, h) * zoom), Color(1, 1, 1, 0.9), false, maxf(2.0, zoom * 0.06))
 		return

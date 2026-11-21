@@ -10,6 +10,7 @@ pub mod content;
 pub mod entity;
 pub mod fluids;
 pub mod geom;
+pub mod heat;
 pub mod networks;
 pub mod power;
 pub mod rng;
@@ -27,5 +28,7 @@ mod tests;
 mod tests_belts;
 #[cfg(test)]
 mod tests_fluids;
+#[cfg(test)]
+mod tests_heat;
 #[cfg(test)]
 mod tests_power;

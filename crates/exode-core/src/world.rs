@@ -15,7 +15,12 @@ use std::collections::BTreeMap;
 pub const CHUNK: i32 = 32;
 pub const CHUNK_AREA: usize = (CHUNK * CHUNK) as usize;
 /// Version du generateur, figee dans chaque partie : un monde existant ne change jamais.
-pub const GENERATOR_VERSION: u32 = 1;
+/// Version du generateur des nouvelles parties.
+/// - v1 : deux ressources (minerais A et B) ;
+/// - v2 (etape 3) : troisieme ressource provisoire [O] « ressource_c » (combustible), avec un
+///   gisement garanti pres du depart. Le reste est identique a v1.
+/// Une partie garde la version de son monde : un monde v1 est toujours genere en v1.
+pub const GENERATOR_VERSION: u32 = 2;
 /// Rayon degage autour du depart (pas d'eau ni d'obstacle).
 pub const START_CLEAR_RADIUS: i64 = 26;
 pub const NO_RESOURCE: u8 = 255;
@@ -252,8 +257,17 @@ fn patch_for_cell(params: &WorldParams, gx: i64, gy: i64, n_res: u8) -> Option<P
     })
 }
 
-fn start_patches() -> [Patch; 2] {
-    [
+/// Nombre de ressources du generateur.
+fn resource_count(params: &WorldParams) -> u8 {
+    if params.generator_version >= 2 {
+        3
+    } else {
+        2
+    }
+}
+
+fn start_patches(params: &WorldParams) -> Vec<Patch> {
+    let mut v = vec![
         Patch {
             cx: -10,
             cy: -2,
@@ -268,7 +282,18 @@ fn start_patches() -> [Patch; 2] {
             kind: 1,
             richness: 900,
         },
-    ]
+    ];
+    if params.generator_version >= 2 {
+        // combustible, au sud de la zone de depart, loin de la scene de demonstration
+        v.push(Patch {
+            cx: -10,
+            cy: 16,
+            radius: 3,
+            kind: 2,
+            richness: 900,
+        });
+    }
+    v
 }
 
 pub fn generate_chunk(params: &WorldParams, key: (i32, i32)) -> Chunk {
@@ -279,7 +304,7 @@ pub fn generate_chunk(params: &WorldParams, key: (i32, i32)) -> Chunk {
     let mut res_amount = vec![0u32; CHUNK_AREA];
     let x0 = key.0 as i64 * CHUNK as i64;
     let y0 = key.1 as i64 * CHUNK as i64;
-    const N_RES: u8 = 2;
+    let n_res = resource_count(params);
 
     // Gisements candidats des cellules voisines.
     let mut patches: Vec<Patch> = Vec::new();
@@ -289,12 +314,12 @@ pub fn generate_chunk(params: &WorldParams, key: (i32, i32)) -> Chunk {
     let gy1 = (y0 + CHUNK as i64 + 64).div_euclid(PATCH_CELL);
     for gy in gy0..=gy1 {
         for gx in gx0..=gx1 {
-            if let Some(p) = patch_for_cell(params, gx, gy, N_RES) {
+            if let Some(p) = patch_for_cell(params, gx, gy, n_res) {
                 patches.push(p);
             }
         }
     }
-    patches.extend(start_patches());
+    patches.extend(start_patches(params));
 
     for ly in 0..CHUNK {
         for lx in 0..CHUNK {
@@ -372,11 +397,53 @@ mod tests {
     use super::*;
 
     fn params(seed: u64) -> WorldParams {
+        params_v(seed, GENERATOR_VERSION)
+    }
+
+    fn params_v(seed: u64, generator_version: u32) -> WorldParams {
         WorldParams {
             seed,
-            generator_version: GENERATOR_VERSION,
+            generator_version,
             infinite_resources: false,
         }
+    }
+
+    fn fingerprint(version: u32) -> u64 {
+        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
+        // v2 : echantillon elargi a des chunks qui contiennent des gisements (celui de la v1
+        // n'en contenait aucun et ne voyait pas le changement de ressources)
+        let keys: &[(i32, i32)] = if version == 1 {
+            &[(0, 0), (1, -1), (-4, 3), (100, 200)]
+        } else {
+            &[
+                (0, 0),
+                (1, -1),
+                (-4, 3),
+                (100, 200),
+                (-1, 0),
+                (3, 2),
+                (-5, -6),
+                (7, -3),
+                (12, 9),
+            ]
+        };
+        for &key in keys {
+            let c = generate_chunk(&params_v(12345, version), key);
+            for v in c
+                .ground
+                .iter()
+                .chain(c.feature.iter())
+                .chain(c.res_kind.iter())
+            {
+                h ^= *v as u64;
+                h = h.wrapping_mul(0x100_0000_01b3);
+            }
+            for v in &c.res_amount {
+                h ^= *v as u64;
+                h = h.wrapping_mul(0x100_0000_01b3);
+            }
+        }
+        h
     }
 
     #[test]
@@ -395,35 +462,47 @@ mod tests {
 
     /// Empreinte de reference : si elle change, le generateur a change et
     /// GENERATOR_VERSION doit etre incremente (un monde existant ne doit jamais changer).
+    /// Empreintes de reference : un monde existant ne doit jamais changer. La v1 doit rester
+    /// celle des premieres parties ; une modification du generateur cree une nouvelle version.
     #[test]
     fn generator_reference_fingerprint() {
-        let mut h: u64 = 0xcbf2_9ce4_8422_2325;
-        for key in [(0, 0), (1, -1), (-4, 3), (100, 200)] {
-            let c = generate_chunk(&params(12345), key);
-            for v in c
-                .ground
-                .iter()
-                .chain(c.feature.iter())
-                .chain(c.res_kind.iter())
-            {
-                h ^= *v as u64;
-                h = h.wrapping_mul(0x100_0000_01b3);
-            }
-            for v in &c.res_amount {
-                h ^= *v as u64;
-                h = h.wrapping_mul(0x100_0000_01b3);
-            }
-        }
         assert_eq!(
-            h, GENERATOR_V1_FINGERPRINT,
+            fingerprint(1),
+            GENERATOR_V1_FINGERPRINT,
+            "les mondes v1 ont change"
+        );
+        assert_eq!(
+            fingerprint(2),
+            GENERATOR_V2_FINGERPRINT,
             "le generateur a change : incrementer GENERATOR_VERSION"
         );
+        assert_eq!(GENERATOR_VERSION, 2);
+    }
+
+    #[test]
+    fn version2_adds_fuel_near_start() {
+        let mut w = World::new(params_v(7, 2));
+        let mut found = false;
+        for y in 12..=20 {
+            for x in -14..=-6 {
+                if let Some((k, _)) = w.resource(Pos::new(x, y)) {
+                    found |= k == 2;
+                }
+            }
+        }
+        assert!(found, "gisement de combustible garanti");
+        let mut w1 = World::new(params_v(7, 1));
+        for y in 12..=20 {
+            for x in -14..=-6 {
+                assert_ne!(w1.resource(Pos::new(x, y)).map(|r| r.0), Some(2));
+            }
+        }
     }
 
     #[test]
     fn start_area_is_clear_with_two_resources() {
         let mut w = World::new(params(7));
-        let mut kinds = [false; 2];
+        let mut kinds = [false; 3];
         for y in -26..=26 {
             for x in -26..=26 {
                 if x * x + y * y > 26 * 26 {
@@ -452,3 +531,5 @@ mod tests {
 
 #[cfg(test)]
 const GENERATOR_V1_FINGERPRINT: u64 = 4726573389097261936;
+#[cfg(test)]
+const GENERATOR_V2_FINGERPRINT: u64 = 1607450470287719893;

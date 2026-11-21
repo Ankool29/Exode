@@ -13,6 +13,7 @@ use crate::content::{Content, ItemId, ProtoId, ProtoKind, RecipeId};
 use crate::entity::*;
 use crate::fluids::{Device, FluidNet};
 use crate::geom::{Dir, Pos};
+use crate::heat::{HeatDevice, HeatNet, HeatStats};
 use crate::networks::NetId;
 use crate::power::{Attached, NodeSpec, PowerGrid, PowerSave};
 use crate::world::{World, WorldParams, GENERATOR_VERSION};
@@ -27,8 +28,9 @@ pub const SAVE_MAGIC: &[u8; 4] = b"EXOD";
 /// Version 3 : reseau electrique a corridors (solutions de flot gardees entre deux calculs),
 /// bilan d'energie.
 /// Version 4 : segments de fluides (volume, fluide, temperature).
-/// Les sauvegardes des versions 1 a 3 sont converties au chargement.
-pub const SAVE_VERSION: u32 = 4;
+/// Version 5 : reseaux de chaleur (energie des caloducs), bilan thermique.
+/// Les sauvegardes des versions 1 a 4 sont converties au chargement.
+pub const SAVE_VERSION: u32 = 5;
 
 /// Hacheur deterministe (FNV-1a) pour les tables de recherche. Ces tables ne sont jamais
 /// parcourues : l'ordre de traitement vient toujours des BTreeMap.
@@ -140,6 +142,45 @@ struct SaveState {
     power: Option<PowerSave>,
     /// Segments de conduites (identifiant canonique) et leur contenu.
     fluids: Vec<(NetId, FluidBox)>,
+    /// Reseaux de caloducs (identifiant canonique) et leur energie.
+    heat: Vec<(NetId, u64)>,
+    heat_stats: HeatStats,
+}
+
+/// Format de la version 4 (lecture seule).
+mod v4 {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct SaveState {
+        pub params: WorldParams,
+        pub tick: u64,
+        pub next_id: EntityId,
+        pub entities: Vec<Entity>,
+        pub belt_items: Vec<(EntityId, BeltLanes)>,
+        pub chunks: Vec<((i32, i32), crate::world::Chunk)>,
+        pub stats: Stats,
+        pub energy: EnergyStats,
+        pub power: Option<PowerSave>,
+        pub fluids: Vec<(NetId, FluidBox)>,
+    }
+
+    pub fn convert(st: SaveState) -> super::SaveState {
+        super::SaveState {
+            params: st.params,
+            tick: st.tick,
+            next_id: st.next_id,
+            entities: st.entities,
+            belt_items: st.belt_items,
+            chunks: st.chunks,
+            stats: st.stats,
+            energy: st.energy,
+            power: st.power,
+            fluids: st.fluids,
+            heat: Vec::new(),
+            heat_stats: HeatStats::default(),
+        }
+    }
 }
 
 /// Format de la version 3 (lecture seule).
@@ -159,8 +200,8 @@ mod v3 {
         pub power: Option<PowerSave>,
     }
 
-    pub fn convert(st: SaveState) -> super::SaveState {
-        super::SaveState {
+    pub fn convert(st: SaveState) -> super::v4::SaveState {
+        super::v4::SaveState {
             params: st.params,
             tick: st.tick,
             next_id: st.next_id,
@@ -324,7 +365,11 @@ pub struct Simulation {
     pending_belt_items: Vec<(EntityId, BeltLanes)>,
     power: PowerGrid,
     pub(crate) fluids: FluidNet,
+    pub(crate) heat: HeatNet,
+    pub heat_stats: HeatStats,
     // caches
+    pub(crate) heat_dirty: bool,
+    pub(crate) heat_devices: Vec<HeatDevice>,
     /// Raccords des appareils a fluide a recalculer.
     pub(crate) fluid_dirty: bool,
     pub(crate) fluid_devices: Vec<Device>,
@@ -335,6 +380,7 @@ pub struct Simulation {
     lists_dirty: bool,
     producer_ids: Vec<EntityId>,
     inserter_ids: Vec<EntityId>,
+    turbine_ids: Vec<EntityId>,
 }
 
 #[derive(Clone, Copy)]
@@ -387,6 +433,10 @@ impl Simulation {
             pending_belt_items: Vec::new(),
             power: PowerGrid::new(),
             fluids: FluidNet::default(),
+            heat: HeatNet::default(),
+            heat_stats: HeatStats::default(),
+            heat_dirty: true,
+            heat_devices: Vec::new(),
             fluid_dirty: true,
             fluid_devices: Vec::new(),
             belts_dirty: true,
@@ -394,6 +444,7 @@ impl Simulation {
             lists_dirty: true,
             producer_ids: Vec::new(),
             inserter_ids: Vec::new(),
+            turbine_ids: Vec::new(),
         }
     }
 
@@ -577,6 +628,10 @@ impl Simulation {
             ProtoKind::Valve => Data::Valve { open: true },
             ProtoKind::Tank => Data::Tank(FluidBox::default()),
             ProtoKind::WaterPump => Data::WaterPump,
+            ProtoKind::Boiler => Data::Boiler(Boiler::default()),
+            ProtoKind::HeatPipe => Data::HeatPipe,
+            ProtoKind::Exchanger => Data::Exchanger(Exchanger::default()),
+            ProtoKind::Turbine => Data::Turbine(Turbine::default()),
         };
         let id = self.next_id;
         self.next_id += 1;
@@ -605,6 +660,10 @@ impl Simulation {
         if matches!(kind, ProtoKind::Pipe | ProtoKind::PipeUnderground) {
             self.fluid_add_pipe(id);
         }
+        if kind == ProtoKind::HeatPipe {
+            self.heat_add_pipe(id);
+        }
+        self.heat_dirty = true;
         self.power_dirty = true;
         self.lists_dirty = true;
         self.fluid_dirty = true;
@@ -640,6 +699,20 @@ impl Simulation {
             let cap = self.content.protos[e.proto as usize].fluid_capacity;
             self.stats.mass_removed += self.fluid_remove_pipe(id, cap);
         }
+        match &e.data {
+            Data::HeatPipe => {
+                let cap = self.content.protos[e.proto as usize].heat_capacity;
+                self.heat_remove_pipe(id, cap);
+            }
+            // la chaleur d'un appareil demonte est perdue, son combustible non brule aussi
+            Data::Boiler(b) => {
+                self.heat_stats.heat_lost += b.heat;
+                self.heat_stats.fuel_removed += b.burn;
+            }
+            Data::Exchanger(x) => self.heat_stats.heat_lost += x.heat,
+            _ => {}
+        }
+        self.heat_dirty = true;
         self.fluid_dirty = true;
         if matches!(e.data, Data::Belt(_)) {
             let items = belts!(&mut self.belts, b => b.remove_tile(id));
@@ -790,6 +863,11 @@ impl Simulation {
     fn entity_mass(&self, e: &Entity) -> u64 {
         let c = &self.content;
         let m = |i: ItemId| c.items[i as usize].mass;
+        let fbm = |b: &FluidBox| {
+            b.fluid
+                .map(|f| b.amount * c.fluids[f as usize].mass)
+                .unwrap_or(0)
+        };
         match &e.data {
             // objets des convoyeurs : comptes a part (lignes de transport)
             Data::Belt(_) => 0,
@@ -818,7 +896,10 @@ impl Simulation {
                 .map(|f| b.amount * c.fluids[f as usize].mass)
                 .unwrap_or(0),
             Data::Pole | Data::Generator | Data::Pipe | Data::Pump | Data::Valve { .. } => 0,
-            Data::WaterPump => 0,
+            Data::WaterPump | Data::HeatPipe => 0,
+            Data::Boiler(b) => b.fuel_item.map(|i| m(i) * b.fuel as u64).unwrap_or(0),
+            Data::Exchanger(x) => fbm(&x.water) + fbm(&x.steam),
+            Data::Turbine(t) => fbm(&t.steam),
         }
     }
 
@@ -882,7 +963,7 @@ impl Simulation {
                     Attached {
                         id: e.id,
                         power: pk.power,
-                        source: pk.kind == ProtoKind::Generator,
+                        source: matches!(pk.kind, ProtoKind::Generator | ProtoKind::Turbine),
                     },
                 ));
             }
@@ -895,10 +976,61 @@ impl Simulation {
         self.refresh_power();
         let entities = &self.entities;
         let wants = |id: EntityId| entities.get(&id).map(|e| e.wants_power).unwrap_or(false);
-        let supply = |_id: EntityId, power: u64| power;
-        let delivered = self.power.update(self.tick, &wants, &supply);
+        let epu = self
+            .content
+            .fluid("vapeur")
+            .map(|f| self.content.fluids[f as usize].energy)
+            .unwrap_or(0);
+        // une turbine fournit au plus ce que porte sa vapeur ; un generateur, sa puissance
+        let supply = |id: EntityId, power: u64| match entities.get(&id).map(|e| &e.data) {
+            Some(Data::Turbine(t)) => power.min(t.energy + t.steam.amount * epu),
+            _ => power,
+        };
+        let produced = self.power.update(self.tick, &wants, &supply);
+        let delivered: u64 = produced.iter().map(|p| p.1).sum();
         self.energy.electric_produced += delivered;
         self.energy.electric_consumed += delivered;
+        // turbines : la vapeur utilisee est evacuee (masse perdue), son energie livree
+        let mut turbine_out = BTreeMap::new();
+        for (id, e) in produced {
+            if matches!(self.entities[&id].data, Data::Turbine(_)) {
+                turbine_out.insert(id, e);
+            }
+        }
+        self.refresh_lists();
+        let turbines = std::mem::take(&mut self.turbine_ids);
+        for &id in &turbines {
+            let out = turbine_out.get(&id).copied().unwrap_or(0);
+            let Data::Turbine(mut t) = self.entities[&id].data else {
+                continue;
+            };
+            let mut used = 0;
+            while t.energy < out && t.steam.amount > 0 && epu > 0 {
+                let f = t.steam.fluid.unwrap();
+                t.steam.remove(1);
+                t.energy += epu;
+                used += 1;
+                self.stats.mass_lost += self.content.fluids[f as usize].mass;
+            }
+            t.energy -= out.min(t.energy);
+            self.heat_stats.steam_used += used * epu;
+            self.heat_stats.turbine_output += out;
+            let has_steam = t.steam.amount > 0 || t.energy > 0;
+            let e = self.entities.get_mut(&id).unwrap();
+            e.data = Data::Turbine(t);
+            e.status = if out > 0 {
+                Status::Working
+            } else if !has_steam {
+                Status::NoInput
+            } else {
+                Status::Idle
+            };
+            if used > 0 {
+                // le tampon de vapeur a change : les raccords se reveillent
+                self.set_box(crate::fluids::Cont::Ent(id, 0), t.steam);
+            }
+        }
+        self.turbine_ids = turbines;
         // etat affiche des noeuds (voyants) : satisfaction de leur zone
         for (node, sat, loaded) in self.power.zone_states() {
             let st = if !loaded {
@@ -934,6 +1066,22 @@ impl Simulation {
                 } else {
                     Want::Any
                 }
+            }
+            Data::Boiler(b) => {
+                if b.fuel >= pk.capacity.max(1) {
+                    return Want::Nothing;
+                }
+                let v = self
+                    .content
+                    .items
+                    .iter()
+                    .enumerate()
+                    .filter(|(i, it)| {
+                        it.fuel > 0 && b.fuel_item.map(|f| f as usize == *i).unwrap_or(true)
+                    })
+                    .map(|(i, _)| i as ItemId)
+                    .collect();
+                Want::Items(v)
             }
             Data::Machine(m) => {
                 let cat = pk.category.as_deref().unwrap_or("");
@@ -1013,6 +1161,11 @@ impl Simulation {
             }
             Data::Storage(st) => {
                 st.add(item, 1);
+                true
+            }
+            Data::Boiler(b) => {
+                b.fuel += 1;
+                b.fuel_item = Some(item);
                 true
             }
             Data::Machine(m) => {
@@ -1111,6 +1264,7 @@ impl Simulation {
             self.update_inserter(id);
         }
         self.inserter_ids = inserters;
+        self.update_heat();
         self.update_fluids();
         self.update_belts();
         self.tick += 1;
@@ -1124,10 +1278,12 @@ impl Simulation {
         self.lists_dirty = false;
         self.producer_ids.clear();
         self.inserter_ids.clear();
+        self.turbine_ids.clear();
         for e in self.entities.values() {
             match e.data {
                 Data::Drill(_) | Data::Machine(_) => self.producer_ids.push(e.id),
                 Data::Inserter(_) => self.inserter_ids.push(e.id),
+                Data::Turbine(_) => self.turbine_ids.push(e.id),
                 _ => {}
             }
         }
@@ -1479,6 +1635,14 @@ impl Simulation {
                 .filter(|(_, b)| b.amount > 0)
                 .map(|(n, b)| (*n, *b))
                 .collect(),
+            heat: self
+                .heat
+                .segs
+                .iter()
+                .filter(|(_, e)| **e > 0)
+                .map(|(n, e)| (*n, *e))
+                .collect(),
+            heat_stats: self.heat_stats.clone(),
             chunks: self
                 .world
                 .modified_chunks()
@@ -1506,17 +1670,22 @@ impl Simulation {
             1 => {
                 let old: v1::SaveState =
                     bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
-                v3::convert(v2::convert(v1::convert(old)))
+                v4::convert(v3::convert(v2::convert(v1::convert(old))))
             }
             2 => {
                 let old: v2::SaveState =
                     bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
-                v3::convert(v2::convert(old))
+                v4::convert(v3::convert(v2::convert(old)))
             }
             3 => {
                 let old: v3::SaveState =
                     bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
-                v3::convert(old)
+                v4::convert(v3::convert(old))
+            }
+            4 => {
+                let old: v4::SaveState =
+                    bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
+                v4::convert(old)
             }
             SAVE_VERSION => bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?,
             _ => {
@@ -1525,7 +1694,7 @@ impl Simulation {
                 ))
             }
         };
-        if st.params.generator_version != GENERATOR_VERSION {
+        if st.params.generator_version == 0 || st.params.generator_version > GENERATOR_VERSION {
             return Err(format!(
                 "generateur v{} requis",
                 st.params.generator_version
@@ -1536,6 +1705,8 @@ impl Simulation {
             st.params.seed,
             st.params.infinite_resources,
         );
+        // le monde garde la version de son generateur (un monde v1 reste v1)
+        sim.world = World::new(st.params);
         sim.tick = st.tick;
         sim.next_id = st.next_id;
         sim.stats = st.stats;
@@ -1566,6 +1737,8 @@ impl Simulation {
             sim.power.restore(p);
         }
         sim.fluid_rebuild_after_load(st.fluids);
+        sim.heat_rebuild_after_load(st.heat);
+        sim.heat_stats = st.heat_stats;
         sim.pending_belt_items = st.belt_items;
         sim.belts_dirty = true;
         sim.lists_dirty = true;

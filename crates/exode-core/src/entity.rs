@@ -123,6 +123,37 @@ pub enum Data {
     },
     Tank(FluidBox),
     WaterPump,
+    // --- chaleur (etape 3) ---
+    /// Chaudiere : combustible en attente, energie restante de l'objet qui brule, chaleur.
+    Boiler(Boiler),
+    /// Caloduc : la chaleur est tenue par son reseau (`heat.rs`).
+    HeatPipe,
+    Exchanger(Exchanger),
+    Turbine(Turbine),
+}
+
+/// Energies en W x tick (1 W pendant un tick), mesurees au-dessus de la temperature ambiante.
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Boiler {
+    pub fuel: u32,
+    /// Combustible : objets en attente (pour le bilan matiere).
+    pub fuel_item: Option<ItemId>,
+    pub burn: u64,
+    pub heat: u64,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Exchanger {
+    pub heat: u64,
+    pub water: FluidBox,
+    pub steam: FluidBox,
+}
+
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct Turbine {
+    pub steam: FluidBox,
+    /// Energie tiree de la vapeur deja evacuee, pas encore livree au reseau.
+    pub energy: u64,
 }
 
 /// Contenu d'un volume de fluide (segment, reservoir, tampon de machine).

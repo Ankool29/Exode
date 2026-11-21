@@ -79,6 +79,7 @@ impl ExodeSim {
         let r = match name.to_string().as_str() {
             "electricite" => scenario::build_power_demo(&mut self.sim, x as i32, y as i32),
             "fluides" => scenario::build_fluid_demo(&mut self.sim, x as i32, y as i32),
+            "chaleur" => scenario::build_heat_demo(&mut self.sim, x as i32, y as i32),
             other => Err(format!("scene inconnue : {other}")),
         };
         match r {
@@ -154,7 +155,8 @@ impl ExodeSim {
         strings(self.sim.content.protos.iter().map(|p| p.name.clone()))
     }
     /// Type de chaque batiment : belt, inserter, drill, machine, chest, waste_bin, pole,
-    /// generator, pipe, pipe_underground, pump, valve, tank, water_pump.
+    /// generator, pipe, pipe_underground, pump, valve, tank, water_pump, boiler, heat_pipe,
+    /// exchanger, turbine.
     #[func]
     fn proto_kinds(&self) -> PackedStringArray {
         strings(self.sim.content.protos.iter().map(|p| {
@@ -173,6 +175,10 @@ impl ExodeSim {
                 ProtoKind::Valve => "valve",
                 ProtoKind::Tank => "tank",
                 ProtoKind::WaterPump => "water_pump",
+                ProtoKind::Boiler => "boiler",
+                ProtoKind::HeatPipe => "heat_pipe",
+                ProtoKind::Exchanger => "exchanger",
+                ProtoKind::Turbine => "turbine",
             }
             .to_string()
         }))
@@ -404,6 +410,14 @@ impl ExodeSim {
                 Data::Pipe => (self.sim.pipe_mask(e.id) as i32, fluid_view(e.id).0),
                 Data::Tank(_) => fluid_view(e.id),
                 Data::Valve { open } => (*open as i32, 0),
+                // caloduc : masque des voisins relies et temperature (degres)
+                Data::HeatPipe => (
+                    self.sim.heat_pipe_mask(e.id) as i32,
+                    self.sim.heat_of(e.id).map(|h| h.0).unwrap_or(15),
+                ),
+                Data::Boiler(_) | Data::Exchanger(_) => {
+                    (-1, self.sim.heat_of(e.id).map(|h| h.0).unwrap_or(15))
+                }
                 Data::Belt(b) => {
                     let c = match b.curve_from {
                         Some(side) if side == e.dir.left() => 1,
@@ -591,7 +605,7 @@ impl ExodeSim {
         d.set("power", self.sim.satisfaction_of(e.id) as i64);
         d.set(
             "needs_power",
-            proto.power > 0 && proto.kind != ProtoKind::Generator,
+            proto.power > 0 && !matches!(proto.kind, ProtoKind::Generator | ProtoKind::Turbine),
         );
         d.set(
             "category",
@@ -667,6 +681,51 @@ impl ExodeSim {
                     "Vanne {} (debit max {} unites par tick, sens unique)",
                     if *open { "ouverte" } else { "fermee" },
                     proto.flow_rate
+                ),
+            ),
+            Data::HeatPipe => {
+                let mut lines = Vec::new();
+                if let Some((net, n)) = self.sim.heat_network_of(e.id) {
+                    lines.push(format!("Reseau de chaleur {net} : {n} caloducs"));
+                }
+                if let Some((t, en, _)) = self.sim.heat_of(e.id) {
+                    lines.push(format!("Temperature : {t} C ({} MJ)", en / 30_000_000));
+                }
+                (-1, lines.join("\n"))
+            }
+            Data::Boiler(b) => {
+                let t = self.sim.heat_of(e.id).map(|h| h.0).unwrap_or(15);
+                (
+                    -1,
+                    format!(
+                        "Temperature : {t} C (max {} C)\nCombustible en attente : {}\nPuissance : {} kW",
+                        proto.temperature,
+                        b.fuel,
+                        proto.heat_power / 1000
+                    ),
+                )
+            }
+            Data::Exchanger(x) => {
+                let t = self.sim.heat_of(e.id).map(|h| h.0).unwrap_or(15);
+                (
+                    -1,
+                    format!(
+                        "Temperature : {t} C (fonctionne a partir de {} C)\nEau : {} / {}\nVapeur : {} / {}",
+                        proto.temperature,
+                        x.water.amount,
+                        proto.fluid_capacity,
+                        x.steam.amount,
+                        proto.fluid_capacity
+                    ),
+                )
+            }
+            Data::Turbine(t) => (
+                -1,
+                format!(
+                    "Vapeur : {} / {}\nPuissance nominale : {} kW",
+                    t.steam.amount,
+                    proto.fluid_capacity,
+                    proto.power / 1000
                 ),
             ),
             Data::Pump | Data::WaterPump => (

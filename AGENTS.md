@@ -42,6 +42,11 @@ Référence : *Cahier de conception consolidé EXODE v0.4*. Statuts : [V] valid�
   ne passe d'un volume à l'autre que par une pompe, une vanne, un réservoir ou une machine, avec
   un débit plafonné ; deux fluides ne se mélangent jamais ; seule la pompe à eau fait entrer de
   la matière.
+- Chaleur : énergies entières en W × tick ; bilan `Simulation::heat_balance_ok` (produite =
+  stockée + perdue + transformée en vapeur ; combustible brûlé = chaleur produite + reste à
+  brûler) ; la turbine ne livre que l'énergie de la vapeur qu'elle évacue (masse perdue).
+- Générateur du monde : v2 depuis l'étape 3 (ressource C). Un monde garde la version de son
+  générateur ; les empreintes v1 et v2 sont vérifiées par `generator_reference_fingerprint`.
 - Déchets [R] : un bras ne dépose des déchets que dans une benne ou sur un convoyeur ; une
   machine dont la sortie de déchets est pleine s'arrête.
 

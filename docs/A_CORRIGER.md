@@ -30,3 +30,7 @@ Responsable : **sprites** (production graphique) ou **code** (moteur, intégrati
 | 20 | Réseaux | Raccords des bâtiments | Le raccord d'un côté occupe une case précise (milieu du côté arrondi), alors que le sprite le dessine au milieu exact pour les bâtiments de largeur paire | mineur | code | Étape 3 | ouvert |
 | 21 | Réseaux | Conduites souterraines | Une entrée peut se relier à deux sorties si l'on en pose une troisième dans le tunnel ; elle ne se tourne pas (à démonter puis reposer) | mineur | code | Étape 3 | ouvert |
 | 22 | Réseaux | Conduites | Pas de calque de niveau pour les conduites (seulement pour le réservoir) : le fluide n'est visible que dans le panneau | mineur | sprites | Étape 3 V3 | ouvert |
+| 23 | Réseaux | Chaleur | Valeurs provisoires [O] : puissances, capacités thermiques, températures, énergie de la vapeur, pertes des caloducs | moyen | code | Étape 3 | ouvert |
+| 24 | Réseaux | Chaudière | La fiche donne un raccord de fluide (côté nord) : non utilisé par la simulation [O] | mineur | code | Étape 3 V3 | ouvert |
+| 25 | Réseaux | Turbine | Pas de point d'émission dans la fiche : la vapeur évacuée est dessinée en haut du corps | mineur | sprites | Étape 3 V3 | ouvert |
+| 26 | Gisements | Ressource C (combustible) | Pas de sprite de gisement : affichée par simple teinte du sol | mineur | sprites | Étape 3 | ouvert |

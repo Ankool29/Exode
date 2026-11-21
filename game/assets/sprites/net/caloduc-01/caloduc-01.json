@@ -1,0 +1,54 @@
+{
+  "id": "net_caloduc_v3",
+  "proto": "caloduc",
+  "source": "EXODE etape 3 reseaux V3",
+  "footprint_tiles": [
+    1,
+    1
+  ],
+  "canvas_px": [
+    64,
+    64
+  ],
+  "anchor_px": [
+    32,
+    32
+  ],
+  "masks": [
+    "net_caloduc_v3_00.png",
+    "net_caloduc_v3_01.png",
+    "net_caloduc_v3_02.png",
+    "net_caloduc_v3_03.png",
+    "net_caloduc_v3_04.png",
+    "net_caloduc_v3_05.png",
+    "net_caloduc_v3_06.png",
+    "net_caloduc_v3_07.png",
+    "net_caloduc_v3_08.png",
+    "net_caloduc_v3_09.png",
+    "net_caloduc_v3_10.png",
+    "net_caloduc_v3_11.png",
+    "net_caloduc_v3_12.png",
+    "net_caloduc_v3_13.png",
+    "net_caloduc_v3_14.png",
+    "net_caloduc_v3_15.png"
+  ],
+  "note": "16 pieces selon les voisins raccordes : N=1, E=2, S=4, W=8",
+  "niveau_masks": [
+    "net_caloduc_v3_00_niveau.png",
+    "net_caloduc_v3_01_niveau.png",
+    "net_caloduc_v3_02_niveau.png",
+    "net_caloduc_v3_03_niveau.png",
+    "net_caloduc_v3_04_niveau.png",
+    "net_caloduc_v3_05_niveau.png",
+    "net_caloduc_v3_06_niveau.png",
+    "net_caloduc_v3_07_niveau.png",
+    "net_caloduc_v3_08_niveau.png",
+    "net_caloduc_v3_09_niveau.png",
+    "net_caloduc_v3_10_niveau.png",
+    "net_caloduc_v3_11_niveau.png",
+    "net_caloduc_v3_12_niveau.png",
+    "net_caloduc_v3_13_niveau.png",
+    "net_caloduc_v3_14_niveau.png",
+    "net_caloduc_v3_15_niveau.png"
+  ]
+}

@@ -62,6 +62,8 @@ const SPRITE_SHEETS := {
 	"benne": "res://assets/sprites/wst/benne-01/benne-01.json",
 	"poteau": "res://assets/sprites/net/poteau-01/poteau-01.json",
 	"generateur": "res://assets/sprites/net/generateur-01/generateur-01.json",
+	"pylone": "res://assets/sprites/net/pylone-01/pylone-01.json",
+	"sous_station": "res://assets/sprites/net/sous-station-01/sous-station-01.json",
 }
 ## Terrain detaille (a partir de ZOOM_TERRAIN px par case) : grandes textures 256 px
 ## echantillonnees selon la position, rives par masque de cotes N=1, E=2, S=4, W=8.
@@ -79,8 +81,10 @@ var _nat := {} ## 1 feuillu, 2 conifere, 3 rocher -> [[texture, ombre], ...]
 var _sprites := {} ## index de batiment -> {base, shadow, glow, parts, smoke, canvas, anchor, ...}
 var _glow_layer: Node2D
 var _fx_layer: Node2D
+var _spark_tex: Array = [] ## fx_etincelle (corridor sature)
 var _glow_jobs: Array = [] ## [texture, rect, alpha]
 var _smoke_jobs: Array = [] ## [texture, rect, alpha]
+var _spark_jobs: Array = [] ## [texture, rect]
 
 var _chunk_tex := {} ## Vector2i -> ImageTexture
 var _chunk_data := {} ## Vector2i -> PackedByteArray
@@ -139,7 +143,7 @@ func _load_sprites() -> void:
 			"state": load(dir + "/" + meta.state) if meta.has("state") else null,
 			"ports": bool(meta.get("ports", false)),
 			"status_dot": proto_kinds[proto] in ["drill", "machine"],
-			"wire": Vector2(meta.wire_px[0], meta.wire_px[1]) if meta.has("wire_px") else Vector2(-1, -1),
+			"wires": _wire_points(meta.get("wire_px", [])),
 			"parts": [],
 			"part_ticks": int(meta.get("part_ticks_per_frame", 6)),
 			"smoke": [],
@@ -150,6 +154,11 @@ func _load_sprites() -> void:
 		for f in meta.get("smoke_frames", []):
 			sp.smoke.append(load(f))
 		_sprites[proto] = sp
+	_spark_tex.clear()
+	for i in 4:
+		var t = _try_load(SPR + "fx/fx_etincelle_%02d.png" % i)
+		if t != null:
+			_spark_tex.append(t)
 	# raccords de sortie communs
 	_port_tex.clear()
 	for d in ["n", "e", "s", "w"]:
@@ -208,6 +217,33 @@ func _load_sprites() -> void:
 				lst.append([t, _try_load(SPR + "nat/%s_v%d_shadow.png" % [entry[1], v + 1])])
 		if not lst.is_empty():
 			_nat[entry[0]] = lst
+
+
+## Points d'accroche des cables : [x, y] (ancien format) ou [[x, y], ...].
+func _wire_points(w) -> Array:
+	var pts := []
+	if w is Array and w.size() > 0:
+		if w[0] is Array:
+			for p in w:
+				pts.append(Vector2(p[0], p[1]))
+		elif w.size() >= 2:
+			pts.append(Vector2(w[0], w[1]))
+	return pts
+
+
+## Points d'accroche des cables d'un noeud, en coordonnees d'ecran.
+func _wire_anchors(proto: int, x: int, y: int) -> Array:
+	var sizes: PackedInt32Array = sim.proto_sizes()
+	var w := sizes[proto * 2]
+	var h := sizes[proto * 2 + 1]
+	if _sprites.has(proto) and not _sprites[proto].wires.is_empty():
+		var sp: Dictionary = _sprites[proto]
+		var f := _sprite_frame(sp, x, y, w, h)
+		var out := []
+		for p in sp.wires:
+			out.append(f[0] + p * f[1])
+		return out
+	return [tile_to_screen(x + w * 0.5, y + h * 0.5)]
 
 
 func _try_load(path: String):
@@ -617,6 +653,8 @@ func _draw_glow_layer() -> void:
 func _draw_fx_layer() -> void:
 	for j in _smoke_jobs:
 		_fx_layer.draw_texture_rect(j[0], j[1], false, Color(1, 1, 1, j[2]))
+	for j in _spark_jobs:
+		_fx_layer.draw_texture_rect(j[0], j[1], false)
 
 
 func _draw_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int, e1: int, e2: int) -> void:
@@ -700,6 +738,7 @@ func _draw() -> void:
 	# 3. ombres des batiments a sprite, puis batiments
 	_glow_jobs.clear()
 	_smoke_jobs.clear()
+	_spark_jobs.clear()
 	for k in n:
 		var b := k * 10
 		if _sprites.has(ents[b + 1]):
@@ -713,16 +752,32 @@ func _draw() -> void:
 	for k in order:
 		var b: int = k * 10
 		_draw_entity(ents[b], ents[b + 1], ents[b + 2], ents[b + 3], ents[b + 4], ents[b + 5], ents[b + 6], ents[b + 7], ents[b + 8], ents[b + 9])
-	# 4. cables
-	var links: PackedInt32Array = sim.pole_links_in_rect(r.position.x - 10, r.position.y - 10, r.end.x + 10, r.end.y + 10)
-	var wire_off := Vector2.ZERO
-	var pole_proto := Array(proto_kinds).find("pole")
-	if _sprites.has(pole_proto) and _sprites[pole_proto].wire.x >= 0.0:
-		wire_off = (_sprites[pole_proto].wire - _sprites[pole_proto].anchor) * (zoom / 64.0)
-	for k in links.size() / 4:
-		var a := tile_to_screen(links[k * 4] + 0.5, links[k * 4 + 1] + 0.5) + wire_off
-		var bb := tile_to_screen(links[k * 4 + 2] + 0.5, links[k * 4 + 3] + 0.5) + wire_off
-		draw_line(a, bb, Color("c87533"), maxf(1.0, zoom * 0.04))
+	# 4. cables : accroches aux points wire_px ; corridor limitant en rouge avec etincelles
+	var links: PackedInt32Array = sim.power_links_in_rect(r.position.x - 34, r.position.y - 34, r.end.x + 34, r.end.y + 34)
+	var tick: int = sim.tick()
+	for k in links.size() / 8:
+		var b := k * 8
+		var pa := _wire_anchors(links[b + 2], links[b], links[b + 1])
+		var pb := _wire_anchors(links[b + 5], links[b + 3], links[b + 4])
+		var load := links[b + 6]
+		var limiting := links[b + 7] == 1
+		var col := Color("c87533")
+		if limiting:
+			col = Color(0.95, 0.15, 0.1)
+		elif load >= 900:
+			col = Color(0.95, 0.55, 0.15)
+		var width := maxf(1.0, zoom * 0.04)
+		var n_w := maxi(pa.size(), pb.size())
+		for wi in n_w:
+			var a: Vector2 = pa[mini(wi, pa.size() - 1)]
+			var bb: Vector2 = pb[mini(wi, pb.size() - 1)]
+			# leger affaissement du cable
+			var mid := (a + bb) * 0.5 + Vector2(0, a.distance_to(bb) * 0.06)
+			draw_polyline(PackedVector2Array([a, mid, bb]), col, width)
+			if limiting and not _spark_tex.is_empty():
+				var frame := (tick / 4 + k + wi) % _spark_tex.size()
+				var ps := 16.0 * zoom / 64.0 * 1.5
+				_spark_jobs.append([_spark_tex[frame], Rect2(mid - Vector2(ps, ps) * 0.5, Vector2(ps, ps))])
 	# 5. fantome de construction et marqueur
 	if ghost_proto >= 0:
 		var p := tile_to_screen(ghost_x, ghost_y)
@@ -730,7 +785,7 @@ func _draw() -> void:
 		var col := Color(0.3, 0.9, 0.4, 0.45) if ghost_ok else Color(0.95, 0.25, 0.2, 0.45)
 		if ghost_radius > 0:
 			var rp := tile_to_screen(ghost_x - ghost_radius, ghost_y - ghost_radius)
-			draw_rect(Rect2(rp, Vector2.ONE * (ghost_radius * 2 + 1) * zoom), Color(0.3, 0.6, 1.0, 0.12))
+			draw_rect(Rect2(rp, (Vector2(ghost_size) + Vector2.ONE * ghost_radius * 2) * zoom), Color(0.3, 0.6, 1.0, 0.12))
 		draw_rect(Rect2(p, size), col)
 		draw_rect(Rect2(p, size), col.lightened(0.4), false, 2.0)
 		var cc := p + size * 0.5

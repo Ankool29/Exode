@@ -1,5 +1,5 @@
 {
-  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts.",
+  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts. Reseaux (etape 3) : portees et capacites de liaison PROVISOIRES [O].",
   "items": [
     { "id": "minerai_a",    "name": "Minerai A",      "mass": 1000, "waste": false, "color": "#8c95a3" },
     { "id": "minerai_b",    "name": "Minerai B",      "mass": 1000, "waste": false, "color": "#c0703f" },
@@ -28,7 +28,9 @@
     { "id": "recycleur",   "name": "Recycleur",   "kind": "machine",   "size": [2, 2], "power": 60000,   "speed": 1000, "category": "recyclage", "auto_recipe": true },
     { "id": "coffre",      "name": "Coffre",      "kind": "chest",     "size": [1, 1], "power": 0,       "capacity": 800 },
     { "id": "benne",       "name": "Benne a dechets", "kind": "waste_bin", "size": [1, 1], "power": 0,   "capacity": 50 },
-    { "id": "poteau",      "name": "Poteau",      "kind": "pole",      "size": [1, 1], "power": 0,       "supply_radius": 3, "wire_reach": 9 },
-    { "id": "generateur",  "name": "Generateur (provisoire)", "kind": "generator", "size": [3, 3], "power": 1000000 }
+    { "id": "poteau",      "name": "Poteau",      "kind": "pole",      "size": [1, 1], "power": 0,       "supply_radius": 3, "wire_reach": 9,  "link_capacity": 500000 },
+    { "id": "generateur",  "name": "Generateur (provisoire)", "kind": "generator", "size": [3, 3], "power": 1000000 },
+    { "id": "pylone",      "name": "Pylone",      "kind": "pole",      "size": [2, 2], "power": 0,       "supply_radius": 0, "wire_reach": 32, "link_capacity": 50000000 },
+    { "id": "sous_station","name": "Sous-station","kind": "pole",      "size": [2, 2], "power": 0,       "supply_radius": 7, "wire_reach": 12, "link_capacity": 20000000 }
   ]
 }

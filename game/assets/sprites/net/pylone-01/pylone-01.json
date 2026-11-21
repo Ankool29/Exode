@@ -1,0 +1,11 @@
+{
+  "id": "net_pylone-01_v3",
+  "proto": "pylone",
+  "source": "EXODE etape 3 reseaux V3",
+  "footprint_tiles": [2, 2],
+  "canvas_px": [128, 288],
+  "anchor_px": [64, 224],
+  "base": "net_pylone-01_v3.png",
+  "shadow": "net_pylone-01_v3_shadow.png",
+  "wire_px": [[27, 11], [101, 11]]
+}

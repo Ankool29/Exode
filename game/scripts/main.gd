@@ -565,6 +565,17 @@ func _screenshot(path: String) -> void:
 	view.zoom = 52.0
 	_open_info(Vector2i(-2, -4))
 	_select_tool_keep_info()
+	for a in OS.get_cmdline_user_args():
+		if a.begins_with("--scene="):
+			# scene de controle (reseaux) posee a l'est du depart
+			_close_info()
+			sim.build_scene(a.substr(8), 60, -10)
+			sim.step(120)
+			view.cam_x = 68.0
+			view.cam_y = 2.0
+			view.zoom = 16.0
+			if "--info" in OS.get_cmdline_user_args():
+				_open_info(Vector2i(68, -10))
 	if "--lac" in OS.get_cmdline_user_args():
 		# outil de controle : centre la vue sur le premier lac trouve
 		_close_info()
@@ -597,6 +608,7 @@ func _select_tool_keep_info() -> void:
 func _selftest() -> void:
 	sim.new_game(42, false)
 	var ok: bool = sim.build_demo()
+	ok = ok and sim.build_scene("electricite", 60, -10)
 	sim.step(3000)
 	var h1: String = sim.state_hash()
 	var bytes: PackedByteArray = sim.save_bytes()
@@ -607,5 +619,8 @@ func _selftest() -> void:
 	var gear := Array(sim.item_keys()).find("engrenage")
 	var gears: int = sim.produced(gear)
 	ok = ok and gears > 0
+	# reseaux electriques : demo + deux reseaux de la scene de controle
+	var p: PackedInt64Array = sim.power_summary()
+	ok = ok and p[3] >= 3
 	print("SELFTEST %s tick=%d engrenages=%d empreinte=%s entites=%d" % ["OK" if ok else "ECHEC", sim.tick(), gears, h1, sim.entity_count()])
 	get_tree().quit(0 if ok else 1)

@@ -618,10 +618,18 @@ fn version1_saves_are_converted() {
         s.run(3000);
         let t = Simulation::load_bytes(late).expect(name);
         assert_eq!(snapshot(&s), snapshot(&t), "{name}");
-        assert_eq!(s.state_hash(), t.state_hash(), "{name}");
+        // le reseau a corridors ne limite rien ici : meme partie qu'avec l'ancien calcul global
+        assert_eq!(
+            s.state_hash_without_power(),
+            t.state_hash_without_power(),
+            "{name}"
+        );
         // reecrite en version 2, la partie se recharge a l'identique
         let bytes = s.save_bytes();
-        assert_eq!(u32::from_le_bytes(bytes[4..8].try_into().unwrap()), 2);
+        assert_eq!(
+            u32::from_le_bytes(bytes[4..8].try_into().unwrap()),
+            crate::sim::SAVE_VERSION
+        );
         let u = Simulation::load_bytes(&bytes).unwrap();
         assert_eq!(u.state_hash(), s.state_hash(), "{name}");
         if name == "belts" {

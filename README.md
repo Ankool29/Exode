@@ -28,17 +28,18 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 | Lignes de transport (banc F1) : coût proportionnel à l'activité, voies bloquées en veille | Fait, testé |
 | Bras mécaniques, foreuses, fours (recette automatique), assembleur, recycleur | Fait |
 | Coffres, bennes à déchets ; une machine dont la sortie de déchets est pleine s'arrête | Fait |
-| Électricité simple : générateur provisoire, poteaux, réseaux, satisfaction partielle | Fait |
+| Socle commun des réseaux : composantes par union à la pose, reconstruction locale au retrait, identifiant canonique, version par réseau | Fait, testé |
+| Électricité à corridors : poteau, pylône, sous-station, liaisons à capacité, flot entier, corridor limitant affiché (câble rouge, étincelles, charge en %) | Fait, testé |
 | Conservation de la matière : contrôle des recettes et bilan global en jeu | Fait |
 | Déterminisme, empreinte d'état, indépendance vis-à-vis de la caméra | Fait, testé |
-| Sauvegarde binaire versionnée (v2, lecture et conversion de la v1), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
+| Sauvegarde binaire versionnée (v3, lecture et conversion des v1 et v2), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
 | Interface tactile : déplacement, pincement, aperçu fantôme, confirmation, portrait et paysage | Fait |
 | Ralentissement cohérent si le matériel sature | Fait |
 
 ## Pas encore fait (prochaines étapes)
 
 - Construction avec matériaux, inventaire, robots et chantiers (v0.4 6.3).
-- Corridors électriques à capacité, fluides, chaleur (bancs F3, F4).
+- Fluides et chaleur (étape 3, pull requests suivantes ; banc F4).
 - Trains, recherche, jalons.
 - Convoyeurs (banc F1) : les cases reliées forment des lignes de transport stockées par
   écarts, et une voie bloquée est mise en veille. Mesures indicatives sur un serveur x86
@@ -49,6 +50,13 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 - Une boucle de convoyeurs remplie à 100 % circule désormais (corrigé).
 - Limite provisoire du modèle de lignes : vitesse d'un convoyeur au plus égale à l'écart
   minimal (64 unités par tick), vérifiée au chargement du contenu.
+- Électricité (étape 3) : choix provisoires signalés [O] — capacités de liaison (poteau
+  500 kW, sous-station 20 MW, pylône 50 MW), portées (9, 12, 32 cases), zone d'alimentation
+  de la sous-station (7 cases), période de recalcul du flot (30 ticks) et réserve jusqu'à la
+  puissance nominale des machines raccordées (au lieu d'un seuil de variation de la demande).
+  Banc F3 (1 500 sous-stations maillées, serveur x86, indicatif) : environ 0,7 à 1 ms par tick
+  contre 0,5 ms avec l'ancien calcul global sans corridors ; un tick avec calcul de flot
+  coûte environ 3 ms.
 - Sprites : lot P0 Pionnier V5 intégré (terrain, convoyeurs, machines, nature, objets) ;
   bras et icônes encore provisoires. Défauts connus : [docs/A_CORRIGER.md](docs/A_CORRIGER.md).
 

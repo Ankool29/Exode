@@ -68,6 +68,9 @@ pub struct Proto {
     pub capacity: u32,
     pub supply_radius: i32,
     pub wire_reach: i32,
+    /// Capacite des liaisons electriques de ce noeud (W) : une liaison vaut la plus faible
+    /// des capacites de ses deux extremites.
+    pub link_capacity: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -137,6 +140,8 @@ struct RawProto {
     supply_radius: i32,
     #[serde(default)]
     wire_reach: i32,
+    #[serde(default)]
+    link_capacity: u64,
 }
 
 impl Content {
@@ -231,6 +236,7 @@ impl Content {
                 capacity: p.capacity,
                 supply_radius: p.supply_radius,
                 wire_reach: p.wire_reach,
+                link_capacity: p.link_capacity,
             });
         }
         let content = Content {
@@ -310,6 +316,14 @@ impl Content {
                 ProtoKind::Machine => {
                     if p.category.is_none() {
                         errors.push(format!("machine {} : categorie manquante", p.key));
+                    }
+                }
+                ProtoKind::Pole => {
+                    if p.wire_reach <= 0 || p.link_capacity == 0 {
+                        errors.push(format!(
+                            "noeud electrique {} : portee ou capacite de liaison nulle",
+                            p.key
+                        ));
                     }
                 }
                 ProtoKind::Belt | ProtoKind::Inserter | ProtoKind::Drill => {

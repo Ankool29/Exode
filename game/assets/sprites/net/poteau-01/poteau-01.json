@@ -1,22 +1,11 @@
 {
-  "id": "net_poteau-01_v1",
+  "id": "net_poteau-01_v3",
   "proto": "poteau",
-  "source": "EXODE P0 Pionnier V5",
-  "footprint_tiles": [
-    1,
-    1
-  ],
-  "canvas_px": [
-    64,
-    160
-  ],
-  "anchor_px": [
-    32,
-    128
-  ],
-  "base": "net_poteau-01_v1.png",
-  "wire_px": [
-    32,
-    47
-  ]
+  "source": "EXODE etape 3 reseaux V3 (net_poteau-01, poteau haut). Ancienne version P0 : net_poteau-01_v1.png",
+  "footprint_tiles": [1, 1],
+  "canvas_px": [64, 160],
+  "anchor_px": [32, 128],
+  "base": "net_poteau-01_v3.png",
+  "shadow": "net_poteau-01_v3_shadow.png",
+  "wire_px": [[17, 30]]
 }

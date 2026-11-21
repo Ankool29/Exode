@@ -30,16 +30,17 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 | Coffres, bennes à déchets ; une machine dont la sortie de déchets est pleine s'arrête | Fait |
 | Socle commun des réseaux : composantes par union à la pose, reconstruction locale au retrait, identifiant canonique, version par réseau | Fait, testé |
 | Électricité à corridors : poteau, pylône, sous-station, liaisons à capacité, flot entier, corridor limitant affiché (câble rouge, étincelles, charge en %) | Fait, testé |
+| Fluides : eau et vapeur, segments de conduites, conduite souterraine, pompe (sens imposé), vanne (sens unique, ouverte ou fermée), réservoir, pompe à eau au bord d'un lac, saturation, température, mélange refusé | Fait, testé |
 | Conservation de la matière : contrôle des recettes et bilan global en jeu | Fait |
 | Déterminisme, empreinte d'état, indépendance vis-à-vis de la caméra | Fait, testé |
-| Sauvegarde binaire versionnée (v3, lecture et conversion des v1 et v2), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
+| Sauvegarde binaire versionnée (v4, lecture et conversion des v1 à v3), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
 | Interface tactile : déplacement, pincement, aperçu fantôme, confirmation, portrait et paysage | Fait |
 | Ralentissement cohérent si le matériel sature | Fait |
 
 ## Pas encore fait (prochaines étapes)
 
 - Construction avec matériaux, inventaire, robots et chantiers (v0.4 6.3).
-- Fluides et chaleur (étape 3, pull requests suivantes ; banc F4).
+- Chaleur : chaudière, caloduc, échangeur, turbine, combustible (étape 3, pull request suivante).
 - Trains, recherche, jalons.
 - Convoyeurs (banc F1) : les cases reliées forment des lignes de transport stockées par
   écarts, et une voie bloquée est mise en veille. Mesures indicatives sur un serveur x86
@@ -57,6 +58,12 @@ le jeu affiche « Bibliothèque native EXODE absente ».
   Banc F3 (1 500 sous-stations maillées, serveur x86, indicatif) : environ 0,7 à 1 ms par tick
   contre 0,5 ms avec l'ancien calcul global sans corridors ; un tick avec calcul de flot
   coûte environ 3 ms.
+- Fluides (étape 3) : choix provisoires signalés [O] — 1 unité = 1 kg ; volumes (conduite 100,
+  réservoir 5 000) ; débits par tick (pompe 20, vanne 30, raccord de réservoir 40, pompe à eau 20) ;
+  la pompe à eau ne consomme pas d'électricité ; la vanne est à sens unique ; une conduite
+  souterraine ne se tourne pas ; les raccords des bâtiments occupent une case précise de leur
+  côté. Banc F4 (3 000 segments séparés par des vannes, serveur x86, indicatif) : environ 1 à
+  1,4 ms par tick pendant que l'eau avance, et presque rien à l'équilibre (appareils en veille).
 - Sprites : lot P0 Pionnier V5 intégré (terrain, convoyeurs, machines, nature, objets) ;
   bras et icônes encore provisoires. Défauts connus : [docs/A_CORRIGER.md](docs/A_CORRIGER.md).
 

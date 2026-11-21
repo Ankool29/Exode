@@ -1,5 +1,5 @@
 {
-  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts. Reseaux (etape 3) : portees et capacites de liaison PROVISOIRES [O].",
+  "_comment": "Contenu PROVISOIRE de la premiere scene (cahier v0.4 : listes de ressources, recettes et batiments encore ouvertes [O]). Masses en grammes. Temps en ticks (30 ticks/s provisoire [P]). Puissances en watts. Reseaux (etape 3) : portees et capacites de liaison, fluides, volumes et debits PROVISOIRES [O]. Fluides en unites entieres (1 unite = 1 kg).",
   "items": [
     { "id": "minerai_a",    "name": "Minerai A",      "mass": 1000, "waste": false, "color": "#8c95a3" },
     { "id": "minerai_b",    "name": "Minerai B",      "mass": 1000, "waste": false, "color": "#c0703f" },
@@ -14,6 +14,10 @@
     { "id": "fonte_b",      "category": "fonte",      "time": 240, "inputs": [["minerai_b", 4]],    "outputs": [["plaque_b", 4], ["scories", 1]] },
     { "id": "engrenage",    "category": "assemblage", "time": 60,  "inputs": [["plaque_a", 2]],     "outputs": [["engrenage", 1], ["chutes_metal", 1]] },
     { "id": "refonte_chutes","category": "recyclage", "time": 180, "inputs": [["chutes_metal", 6]], "outputs": [["plaque_a", 2]] }
+  ],
+  "fluids": [
+    { "id": "eau",    "name": "Eau",    "mass": 1000, "temperature": 15,  "color": "#3f7fbf" },
+    { "id": "vapeur", "name": "Vapeur", "mass": 1000, "temperature": 165, "color": "#d8dde3" }
   ],
   "resources": [
     { "id": "ressource_a", "item": "minerai_a", "color": "#7a8494" },
@@ -31,6 +35,12 @@
     { "id": "poteau",      "name": "Poteau",      "kind": "pole",      "size": [1, 1], "power": 0,       "supply_radius": 3, "wire_reach": 9,  "link_capacity": 500000 },
     { "id": "generateur",  "name": "Generateur (provisoire)", "kind": "generator", "size": [3, 3], "power": 1000000 },
     { "id": "pylone",      "name": "Pylone",      "kind": "pole",      "size": [2, 2], "power": 0,       "supply_radius": 0, "wire_reach": 32, "link_capacity": 50000000 },
-    { "id": "sous_station","name": "Sous-station","kind": "pole",      "size": [2, 2], "power": 0,       "supply_radius": 7, "wire_reach": 12, "link_capacity": 20000000 }
+    { "id": "sous_station","name": "Sous-station","kind": "pole",      "size": [2, 2], "power": 0,       "supply_radius": 7, "wire_reach": 12, "link_capacity": 20000000 },
+    { "id": "conduite",    "name": "Conduite",    "kind": "pipe",      "size": [1, 1], "power": 0,       "fluid_capacity": 100 },
+    { "id": "conduite_souterraine", "name": "Conduite souterraine", "kind": "pipe_underground", "size": [1, 1], "power": 0, "fluid_capacity": 100, "reach": 10 },
+    { "id": "pompe",       "name": "Pompe",       "kind": "pump",      "size": [1, 2], "power": 30000,   "flow_rate": 20 },
+    { "id": "vanne",       "name": "Vanne",       "kind": "valve",     "size": [1, 1], "power": 0,       "flow_rate": 30 },
+    { "id": "reservoir",   "name": "Reservoir",   "kind": "tank",      "size": [3, 3], "power": 0,       "fluid_capacity": 5000, "flow_rate": 40 },
+    { "id": "pompe_eau",   "name": "Pompe a eau", "kind": "water_pump","size": [1, 2], "power": 0,       "flow_rate": 20 }
   ]
 }

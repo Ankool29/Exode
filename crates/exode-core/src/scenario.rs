@@ -146,3 +146,31 @@ pub fn build_power_demo(sim: &mut Simulation, ox: i32, oy: i32) -> Result<(), St
     }
     Ok(())
 }
+
+/// Scene de controle des fluides (etape 3) : reservoir plein, conduites, pompe, vanne fermee
+/// puis ouverte, conduite souterraine sous des coffres, second reservoir ; poteau et
+/// generateur pour la pompe.
+pub fn build_fluid_demo(sim: &mut Simulation, ox: i32, oy: i32) -> Result<(), String> {
+    use Dir::*;
+    let water = sim.content.fluid("eau").ok_or("fluide eau")?;
+    put_clear(sim, "reservoir", ox, oy, N)?;
+    put_clear(sim, "conduite", ox + 3, oy + 1, N)?;
+    put_clear(sim, "conduite", ox + 4, oy + 1, N)?;
+    put_clear(sim, "pompe", ox + 5, oy + 1, E)?;
+    put_clear(sim, "conduite", ox + 7, oy + 1, N)?;
+    put_clear(sim, "conduite", ox + 7, oy + 2, N)?;
+    put_clear(sim, "conduite", ox + 7, oy + 3, N)?;
+    put_clear(sim, "conduite_souterraine", ox + 8, oy + 3, W)?;
+    for k in 0..4 {
+        put_clear(sim, "coffre", ox + 9 + k, oy + 3, N)?;
+    }
+    put_clear(sim, "conduite_souterraine", ox + 13, oy + 3, E)?;
+    put_clear(sim, "conduite", ox + 14, oy + 3, N)?;
+    put_clear(sim, "vanne", ox + 15, oy + 3, E)?;
+    put_clear(sim, "conduite", ox + 16, oy + 3, N)?;
+    put_clear(sim, "reservoir", ox + 17, oy + 2, N)?;
+    put_clear(sim, "generateur", ox + 1, oy + 5, N)?;
+    put_clear(sim, "poteau", ox + 5, oy + 3, N)?;
+    sim.debug_fill(Pos::new(ox, oy), water, 5000);
+    Ok(())
+}

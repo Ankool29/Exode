@@ -11,7 +11,9 @@
 use crate::belts::{self, BeltBackend, LineBelts, Topology};
 use crate::content::{Content, ItemId, ProtoId, ProtoKind, RecipeId};
 use crate::entity::*;
+use crate::fluids::{Device, FluidNet};
 use crate::geom::{Dir, Pos};
+use crate::networks::NetId;
 use crate::power::{Attached, NodeSpec, PowerGrid, PowerSave};
 use crate::world::{World, WorldParams, GENERATOR_VERSION};
 use serde::{Deserialize, Serialize};
@@ -23,8 +25,10 @@ pub const TICKS_PER_SECOND: u32 = 30;
 pub const SAVE_MAGIC: &[u8; 4] = b"EXOD";
 /// Version 2 : objets des convoyeurs ranges a part, case par case (lignes de transport).
 /// Version 3 : reseau electrique a corridors (solutions de flot gardees entre deux calculs),
-/// bilan d'energie. Les sauvegardes des versions 1 et 2 sont converties au chargement.
-pub const SAVE_VERSION: u32 = 3;
+/// bilan d'energie.
+/// Version 4 : segments de fluides (volume, fluide, temperature).
+/// Les sauvegardes des versions 1 a 3 sont converties au chargement.
+pub const SAVE_VERSION: u32 = 4;
 
 /// Hacheur deterministe (FNV-1a) pour les tables de recherche. Ces tables ne sont jamais
 /// parcourues : l'ordre de traitement vient toujours des BTreeMap.
@@ -76,16 +80,39 @@ pub enum BuildError {
     Blocked(Pos),
     Occupied(Pos),
     NoResource,
+    /// La conduite relierait deux segments de fluides differents.
+    FluidMix,
+    /// Pompe a eau : la case derriere elle doit etre de l'eau.
+    NoWater,
 }
 
 #[derive(Debug, Clone)]
 pub enum Command {
-    Build { proto: ProtoId, pos: Pos, dir: Dir },
-    Remove { pos: Pos },
-    Rotate { pos: Pos },
-    SetRecipe { pos: Pos, recipe: Option<RecipeId> },
-    ClearFeature { pos: Pos },
-    FillWater { pos: Pos },
+    Build {
+        proto: ProtoId,
+        pos: Pos,
+        dir: Dir,
+    },
+    Remove {
+        pos: Pos,
+    },
+    Rotate {
+        pos: Pos,
+    },
+    SetRecipe {
+        pos: Pos,
+        recipe: Option<RecipeId>,
+    },
+    ClearFeature {
+        pos: Pos,
+    },
+    FillWater {
+        pos: Pos,
+    },
+    /// Ouvre ou ferme une vanne.
+    Toggle {
+        pos: Pos,
+    },
 }
 
 /// Bilan d'energie (W x tick). Electricite : produite = distribuee (pas de pertes en ligne).
@@ -111,6 +138,41 @@ struct SaveState {
     energy: EnergyStats,
     /// `None` : sauvegarde d'une version anterieure, flot a recalculer au chargement.
     power: Option<PowerSave>,
+    /// Segments de conduites (identifiant canonique) et leur contenu.
+    fluids: Vec<(NetId, FluidBox)>,
+}
+
+/// Format de la version 3 (lecture seule).
+mod v3 {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct SaveState {
+        pub params: WorldParams,
+        pub tick: u64,
+        pub next_id: EntityId,
+        pub entities: Vec<Entity>,
+        pub belt_items: Vec<(EntityId, BeltLanes)>,
+        pub chunks: Vec<((i32, i32), crate::world::Chunk)>,
+        pub stats: Stats,
+        pub energy: EnergyStats,
+        pub power: Option<PowerSave>,
+    }
+
+    pub fn convert(st: SaveState) -> super::SaveState {
+        super::SaveState {
+            params: st.params,
+            tick: st.tick,
+            next_id: st.next_id,
+            entities: st.entities,
+            belt_items: st.belt_items,
+            chunks: st.chunks,
+            stats: st.stats,
+            energy: st.energy,
+            power: st.power,
+            fluids: Vec::new(),
+        }
+    }
 }
 
 /// Format de la version 2 (lecture seule).
@@ -128,8 +190,8 @@ mod v2 {
         pub stats: Stats,
     }
 
-    pub fn convert(st: SaveState) -> super::SaveState {
-        super::SaveState {
+    pub fn convert(st: SaveState) -> super::v3::SaveState {
+        super::v3::SaveState {
             params: st.params,
             tick: st.tick,
             next_id: st.next_id,
@@ -253,7 +315,7 @@ pub struct Simulation {
     pub world: World,
     pub tick: u64,
     next_id: EntityId,
-    entities: BTreeMap<EntityId, Entity>,
+    pub(crate) entities: BTreeMap<EntityId, Entity>,
     occ: FastMap<Pos, EntityId>,
     pub stats: Stats,
     pub energy: EnergyStats,
@@ -261,7 +323,11 @@ pub struct Simulation {
     /// Objets lus dans une sauvegarde, poses a la prochaine reconstruction des lignes.
     pending_belt_items: Vec<(EntityId, BeltLanes)>,
     power: PowerGrid,
+    pub(crate) fluids: FluidNet,
     // caches
+    /// Raccords des appareils a fluide a recalculer.
+    pub(crate) fluid_dirty: bool,
+    pub(crate) fluid_devices: Vec<Device>,
     belts_dirty: bool,
     /// Raccordements electriques a recalculer (pose ou retrait).
     power_dirty: bool,
@@ -320,6 +386,9 @@ impl Simulation {
             belts: BeltStore::Lines(LineBelts::new()),
             pending_belt_items: Vec::new(),
             power: PowerGrid::new(),
+            fluids: FluidNet::default(),
+            fluid_dirty: true,
+            fluid_devices: Vec::new(),
             belts_dirty: true,
             power_dirty: true,
             lists_dirty: true,
@@ -466,9 +535,28 @@ impl Simulation {
                 }
             }
         }
-        if self.content.protos[proto as usize].kind == ProtoKind::Drill && !has_resource {
+        let kind = self.content.protos[proto as usize].kind;
+        if kind == ProtoKind::Drill && !has_resource {
             return Err(BuildError::NoResource);
         }
+        if kind == ProtoKind::WaterPump {
+            // prise d'eau : la case derriere la pompe
+            let probe = Entity {
+                id: 0,
+                proto,
+                pos,
+                dir,
+                w,
+                h,
+                data: Data::WaterPump,
+                status: Status::Idle,
+                wants_power: false,
+            };
+            if self.world.ground(probe.back_tile()) != crate::world::Ground::Water {
+                return Err(BuildError::NoWater);
+            }
+        }
+        self.check_fluid_mix(kind, pos, dir)?;
         Ok(())
     }
 
@@ -484,6 +572,11 @@ impl Simulation {
             ProtoKind::Chest | ProtoKind::WasteBin => Data::Storage(Storage::default()),
             ProtoKind::Pole => Data::Pole,
             ProtoKind::Generator => Data::Generator,
+            ProtoKind::Pipe | ProtoKind::PipeUnderground => Data::Pipe,
+            ProtoKind::Pump => Data::Pump,
+            ProtoKind::Valve => Data::Valve { open: true },
+            ProtoKind::Tank => Data::Tank(FluidBox::default()),
+            ProtoKind::WaterPump => Data::WaterPump,
         };
         let id = self.next_id;
         self.next_id += 1;
@@ -509,8 +602,12 @@ impl Simulation {
         if kind == ProtoKind::Belt {
             self.belts_dirty = true;
         }
+        if matches!(kind, ProtoKind::Pipe | ProtoKind::PipeUnderground) {
+            self.fluid_add_pipe(id);
+        }
         self.power_dirty = true;
         self.lists_dirty = true;
+        self.fluid_dirty = true;
         Ok(id)
     }
 
@@ -539,6 +636,11 @@ impl Simulation {
         if matches!(e.data, Data::Pole) {
             self.power.remove_node(id);
         }
+        if matches!(e.data, Data::Pipe) {
+            let cap = self.content.protos[e.proto as usize].fluid_capacity;
+            self.stats.mass_removed += self.fluid_remove_pipe(id, cap);
+        }
+        self.fluid_dirty = true;
         if matches!(e.data, Data::Belt(_)) {
             let items = belts!(&mut self.belts, b => b.remove_tile(id));
             let c = &self.content;
@@ -554,11 +656,16 @@ impl Simulation {
         let Some(id) = self.occ.get(&p).copied() else {
             return false;
         };
+        if self.kind_of(&self.entities[&id]) == ProtoKind::PipeUnderground {
+            // le tunnel changerait de partenaire : a demonter et reposer
+            return false;
+        }
         let e = self.entities.get_mut(&id).unwrap();
         if e.w != e.h {
             return false;
         }
         e.dir = e.dir.cw();
+        self.fluid_dirty = true;
         if matches!(e.data, Data::Belt(_)) {
             self.belts_dirty = true;
         }
@@ -617,6 +724,7 @@ impl Simulation {
             Command::FillWater { pos } => {
                 !self.occ.contains_key(&pos) && self.world.fill_water(pos)
             }
+            Command::Toggle { pos } => self.toggle_at(pos),
         }
     }
 
@@ -705,7 +813,12 @@ impl Simulation {
                 s
             }
             Data::Storage(st) => st.items.iter().map(|(i, n)| m(*i) * *n as u64).sum(),
-            Data::Pole | Data::Generator => 0,
+            Data::Tank(b) => b
+                .fluid
+                .map(|f| b.amount * c.fluids[f as usize].mass)
+                .unwrap_or(0),
+            Data::Pole | Data::Generator | Data::Pipe | Data::Pump | Data::Valve { .. } => 0,
+            Data::WaterPump => 0,
         }
     }
 
@@ -719,6 +832,7 @@ impl Simulation {
             .map(|e| self.entity_mass(e))
             .sum::<u64>()
             + belt_mass
+            + self.fluid_segment_mass()
     }
 
     /// Bilan de conservation : extrait = present + perdu + retire.
@@ -997,6 +1111,7 @@ impl Simulation {
             self.update_inserter(id);
         }
         self.inserter_ids = inserters;
+        self.update_fluids();
         self.update_belts();
         self.tick += 1;
     }
@@ -1357,6 +1472,13 @@ impl Simulation {
             belt_items: self.belt_items_by_tile(),
             energy: self.energy.clone(),
             power: Some(self.power.save()),
+            fluids: self
+                .fluids
+                .segs
+                .iter()
+                .filter(|(_, b)| b.amount > 0)
+                .map(|(n, b)| (*n, *b))
+                .collect(),
             chunks: self
                 .world
                 .modified_chunks()
@@ -1384,12 +1506,17 @@ impl Simulation {
             1 => {
                 let old: v1::SaveState =
                     bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
-                v2::convert(v1::convert(old))
+                v3::convert(v2::convert(v1::convert(old)))
             }
             2 => {
                 let old: v2::SaveState =
                     bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
-                v2::convert(old)
+                v3::convert(v2::convert(old))
+            }
+            3 => {
+                let old: v3::SaveState =
+                    bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
+                v3::convert(old)
             }
             SAVE_VERSION => bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?,
             _ => {
@@ -1438,6 +1565,7 @@ impl Simulation {
         if let Some(p) = st.power {
             sim.power.restore(p);
         }
+        sim.fluid_rebuild_after_load(st.fluids);
         sim.pending_belt_items = st.belt_items;
         sim.belts_dirty = true;
         sim.lists_dirty = true;

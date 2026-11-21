@@ -8,6 +8,7 @@ pub type ItemId = u16;
 pub type RecipeId = u16;
 pub type ProtoId = u16;
 pub type ResourceId = u8;
+pub type FluidId = u8;
 
 /// Contenu fourni avec le noyau. Provisoire : les listes definitives restent ouvertes [O].
 pub const DEFAULT_CONTENT: &str = include_str!("../data/content.json");
@@ -32,6 +33,18 @@ pub struct Recipe {
     pub outputs: Vec<(ItemId, u32)>,
 }
 
+/// Fluide (etape 3). Les quantites sont en unites entieres.
+#[derive(Debug, Clone)]
+pub struct Fluid {
+    pub key: String,
+    pub name: String,
+    /// Masse d'une unite, en grammes (bilan matiere).
+    pub mass: u64,
+    /// Temperature a la production, en degres Celsius.
+    pub temperature: i32,
+    pub color: String,
+}
+
 #[derive(Debug, Clone)]
 pub struct Resource {
     pub key: String,
@@ -49,6 +62,18 @@ pub enum ProtoKind {
     WasteBin,
     Pole,
     Generator,
+    /// Conduite (relie ses quatre voisines).
+    Pipe,
+    /// Conduite souterraine : un raccord en surface (cote `dir`), un tunnel vers l'arriere.
+    PipeUnderground,
+    /// Pompe : impose le sens, debit plafonne, consomme de l'electricite.
+    Pump,
+    /// Vanne : ouverte, laisse passer dans son sens ; fermee, bloque.
+    Valve,
+    /// Reservoir : volume propre, quatre raccords.
+    Tank,
+    /// Pompe a eau : au bord d'un lac, produit de l'eau.
+    WaterPump,
 }
 
 #[derive(Debug, Clone)]
@@ -71,6 +96,12 @@ pub struct Proto {
     /// Capacite des liaisons electriques de ce noeud (W) : une liaison vaut la plus faible
     /// des capacites de ses deux extremites.
     pub link_capacity: u64,
+    /// Volume d'une conduite ou d'un reservoir (unites de fluide).
+    pub fluid_capacity: u64,
+    /// Debit maximal (unites par tick) d'une pompe, d'une vanne ou d'un raccord de reservoir.
+    pub flow_rate: u64,
+    /// Portee d'une conduite souterraine (cases).
+    pub reach: i32,
 }
 
 #[derive(Debug, Clone)]
@@ -78,6 +109,7 @@ pub struct Content {
     pub items: Vec<Item>,
     pub recipes: Vec<Recipe>,
     pub resources: Vec<Resource>,
+    pub fluids: Vec<Fluid>,
     pub protos: Vec<Proto>,
     item_index: BTreeMap<String, ItemId>,
     recipe_index: BTreeMap<String, RecipeId>,
@@ -89,7 +121,19 @@ struct RawContent {
     items: Vec<RawItem>,
     recipes: Vec<RawRecipe>,
     resources: Vec<RawResource>,
+    #[serde(default)]
+    fluids: Vec<RawFluid>,
     buildings: Vec<RawProto>,
+}
+
+#[derive(Deserialize)]
+struct RawFluid {
+    id: String,
+    name: String,
+    mass: u64,
+    temperature: i32,
+    #[serde(default)]
+    color: String,
 }
 
 #[derive(Deserialize)]
@@ -142,6 +186,12 @@ struct RawProto {
     wire_reach: i32,
     #[serde(default)]
     link_capacity: u64,
+    #[serde(default)]
+    fluid_capacity: u64,
+    #[serde(default)]
+    flow_rate: u64,
+    #[serde(default)]
+    reach: i32,
 }
 
 impl Content {
@@ -206,6 +256,19 @@ impl Content {
                 color: r.color,
             });
         }
+        let mut fluids = Vec::new();
+        for f in raw.fluids {
+            if fluids.iter().any(|x: &Fluid| x.key == f.id) {
+                return Err(format!("fluide en double : {}", f.id));
+            }
+            fluids.push(Fluid {
+                key: f.id,
+                name: f.name,
+                mass: f.mass,
+                temperature: f.temperature,
+                color: f.color,
+            });
+        }
         let mut proto_index = BTreeMap::new();
         let mut protos = Vec::new();
         for (i, p) in raw.buildings.into_iter().enumerate() {
@@ -218,6 +281,12 @@ impl Content {
                 "waste_bin" => ProtoKind::WasteBin,
                 "pole" => ProtoKind::Pole,
                 "generator" => ProtoKind::Generator,
+                "pipe" => ProtoKind::Pipe,
+                "pipe_underground" => ProtoKind::PipeUnderground,
+                "pump" => ProtoKind::Pump,
+                "valve" => ProtoKind::Valve,
+                "tank" => ProtoKind::Tank,
+                "water_pump" => ProtoKind::WaterPump,
                 other => return Err(format!("type de batiment inconnu : {other}")),
             };
             if proto_index.insert(p.id.clone(), i as ProtoId).is_some() {
@@ -237,12 +306,16 @@ impl Content {
                 supply_radius: p.supply_radius,
                 wire_reach: p.wire_reach,
                 link_capacity: p.link_capacity,
+                fluid_capacity: p.fluid_capacity,
+                flow_rate: p.flow_rate,
+                reach: p.reach,
             });
         }
         let content = Content {
             items,
             recipes,
             resources,
+            fluids,
             protos,
             item_index,
             recipe_index,
@@ -263,6 +336,13 @@ impl Content {
     }
     pub fn proto(&self, key: &str) -> Option<ProtoId> {
         self.proto_index.get(key).copied()
+    }
+
+    pub fn fluid(&self, key: &str) -> Option<FluidId> {
+        self.fluids
+            .iter()
+            .position(|f| f.key == key)
+            .map(|i| i as FluidId)
     }
 
     /// Masse totale (grammes) d'une liste d'objets.
@@ -316,6 +396,19 @@ impl Content {
                 ProtoKind::Machine => {
                     if p.category.is_none() {
                         errors.push(format!("machine {} : categorie manquante", p.key));
+                    }
+                }
+                ProtoKind::Pipe | ProtoKind::PipeUnderground | ProtoKind::Tank => {
+                    if p.fluid_capacity == 0 {
+                        errors.push(format!("{} : volume nul", p.key));
+                    }
+                    if p.kind == ProtoKind::PipeUnderground && p.reach <= 1 {
+                        errors.push(format!("{} : portee trop courte", p.key));
+                    }
+                }
+                ProtoKind::Pump | ProtoKind::Valve | ProtoKind::WaterPump => {
+                    if p.flow_rate == 0 {
+                        errors.push(format!("{} : debit nul", p.key));
                     }
                 }
                 ProtoKind::Pole => {

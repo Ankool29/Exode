@@ -38,6 +38,10 @@ Référence : *Cahier de conception consolidé EXODE v0.4*. Statuts : [V] valid�
   petit identifiant d'entité, version par réseau). Électricité : la puissance servie ne dépasse
   jamais la production ni la capacité d'une liaison ; le flot est recalculé au changement de
   topologie et toutes les `FLOW_PERIOD` ticks, et ses solutions font partie de la sauvegarde.
+- Fluides : un segment de conduites a un seul fluide, un volume et une température ; le fluide
+  ne passe d'un volume à l'autre que par une pompe, une vanne, un réservoir ou une machine, avec
+  un débit plafonné ; deux fluides ne se mélangent jamais ; seule la pompe à eau fait entrer de
+  la matière.
 - Déchets [R] : un bras ne dépose des déchets que dans une benne ou sur un convoyeur ; une
   machine dont la sortie de déchets est pleine s'arrête.
 

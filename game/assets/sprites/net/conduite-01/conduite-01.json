@@ -1,0 +1,36 @@
+{
+  "id": "net_conduite_v3",
+  "proto": "conduite",
+  "source": "EXODE etape 3 reseaux V3",
+  "footprint_tiles": [
+    1,
+    1
+  ],
+  "canvas_px": [
+    64,
+    80
+  ],
+  "anchor_px": [
+    32,
+    48
+  ],
+  "masks": [
+    "net_conduite_v3_00.png",
+    "net_conduite_v3_01.png",
+    "net_conduite_v3_02.png",
+    "net_conduite_v3_03.png",
+    "net_conduite_v3_04.png",
+    "net_conduite_v3_05.png",
+    "net_conduite_v3_06.png",
+    "net_conduite_v3_07.png",
+    "net_conduite_v3_08.png",
+    "net_conduite_v3_09.png",
+    "net_conduite_v3_10.png",
+    "net_conduite_v3_11.png",
+    "net_conduite_v3_12.png",
+    "net_conduite_v3_13.png",
+    "net_conduite_v3_14.png",
+    "net_conduite_v3_15.png"
+  ],
+  "note": "16 pieces selon les voisins raccordes : N=1, E=2, S=4, W=8"
+}

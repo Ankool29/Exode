@@ -51,6 +51,7 @@ var proto_names: PackedStringArray
 var item_colors: Array[Color] = []
 var item_waste: PackedInt32Array
 var resource_colors: Array[Color] = []
+var fluid_colors: Array[Color] = []
 
 ## Sprites des batiments : fiche de metadonnees par batiment (GRAPHICS-01 section 3.9).
 ## Les batiments sans sprite gardent l'affichage provisoire.
@@ -64,6 +65,12 @@ const SPRITE_SHEETS := {
 	"generateur": "res://assets/sprites/net/generateur-01/generateur-01.json",
 	"pylone": "res://assets/sprites/net/pylone-01/pylone-01.json",
 	"sous_station": "res://assets/sprites/net/sous-station-01/sous-station-01.json",
+	"conduite": "res://assets/sprites/net/conduite-01/conduite-01.json",
+	"conduite_souterraine": "res://assets/sprites/net/conduite-souterraine-01/conduite-souterraine-01.json",
+	"pompe": "res://assets/sprites/net/pompe-01/pompe-01.json",
+	"pompe_eau": "res://assets/sprites/net/pompe-eau-01/pompe-eau-01.json",
+	"vanne": "res://assets/sprites/net/vanne-01/vanne-01.json",
+	"reservoir": "res://assets/sprites/net/reservoir-01/reservoir-01.json",
 }
 ## Terrain detaille (a partir de ZOOM_TERRAIN px par case) : grandes textures 256 px
 ## echantillonnees selon la position, rives par masque de cotes N=1, E=2, S=4, W=8.
@@ -103,6 +110,9 @@ func setup(s) -> void:
 	resource_colors.clear()
 	for c in sim.resource_colors():
 		resource_colors.append(Color(c))
+	fluid_colors.clear()
+	for c in sim.fluid_colors():
+		fluid_colors.append(Color(c))
 	_font = ThemeDB.fallback_font
 	_load_sprites()
 	invalidate_terrain()
@@ -134,26 +144,24 @@ func _load_sprites() -> void:
 			push_warning("fiche de sprite illisible : " + path)
 			continue
 		var dir := path.get_base_dir()
-		var sp := {
-			"canvas": Vector2(meta.canvas_px[0], meta.canvas_px[1]),
-			"anchor": Vector2(meta.anchor_px[0], meta.anchor_px[1]),
-			"base": load(dir + "/" + meta.base),
-			"shadow": load(dir + "/" + meta.shadow) if meta.has("shadow") else null,
-			"glow": load(dir + "/" + meta.glow) if meta.has("glow") else null,
-			"state": load(dir + "/" + meta.state) if meta.has("state") else null,
-			"ports": bool(meta.get("ports", false)),
-			"status_dot": proto_kinds[proto] in ["drill", "machine"],
-			"wires": _wire_points(meta.get("wire_px", [])),
-			"parts": [],
-			"part_ticks": int(meta.get("part_ticks_per_frame", 6)),
-			"smoke": [],
-			"smoke_origin": Vector2(meta.smoke_origin_px[0], meta.smoke_origin_px[1]) if meta.has("smoke_origin_px") else Vector2(-1, -1),
-		}
-		for f in meta.get("part_frames", []):
-			sp.parts.append(load(dir + "/" + f))
-		for f in meta.get("smoke_frames", []):
-			sp.smoke.append(load(f))
-		_sprites[proto] = sp
+		if meta.has("directions"):
+			# une fiche par orientation (batiments 2 x 3, 1 x 2, vanne, conduite souterraine)
+			var dirs := []
+			for dl in ["n", "e", "s", "w"]:
+				dirs.append(_load_sheet(dir, meta.directions[dl], proto))
+			_sprites[proto] = {"dirs": dirs}
+		elif meta.has("masks"):
+			# conduites : 16 pieces selon les voisins raccordes (N=1, E=2, S=4, W=8)
+			var sp := _load_sheet(dir, meta, proto)
+			sp.masks = []
+			for f in meta.masks:
+				sp.masks.append(load(dir + "/" + f))
+			sp.niveau_masks = []
+			for f in meta.get("niveau_masks", []):
+				sp.niveau_masks.append(load(dir + "/" + f))
+			_sprites[proto] = sp
+		else:
+			_sprites[proto] = _load_sheet(dir, meta, proto)
 	_spark_tex.clear()
 	for i in 4:
 		var t = _try_load(SPR + "fx/fx_etincelle_%02d.png" % i)
@@ -219,6 +227,38 @@ func _load_sprites() -> void:
 			_nat[entry[0]] = lst
 
 
+## Fiche de sprite (une orientation) : textures et reperes.
+func _load_sheet(dir: String, meta: Dictionary, proto: int) -> Dictionary:
+	var sp := {
+		"canvas": Vector2(meta.canvas_px[0], meta.canvas_px[1]),
+		"anchor": Vector2(meta.anchor_px[0], meta.anchor_px[1]),
+		"base": load(dir + "/" + meta.base) if meta.has("base") else null,
+		"shadow": load(dir + "/" + meta.shadow) if meta.has("shadow") else null,
+		"glow": load(dir + "/" + meta.glow) if meta.has("glow") else null,
+		"state": load(dir + "/" + meta.state) if meta.has("state") else null,
+		"niveau": load(dir + "/" + meta.niveau) if meta.has("niveau") else null,
+		"fermee": load(dir + "/" + meta.fermee) if meta.has("fermee") else null,
+		"ports": bool(meta.get("ports", false)),
+		"status_dot": proto_kinds[proto] in ["drill", "machine"],
+		"wires": _wire_points(meta.get("wire_px", [])),
+		"parts": [],
+		"part_ticks": int(meta.get("part_ticks_per_frame", 6)),
+		"smoke": [],
+		"smoke_origin": Vector2(meta.smoke_origin_px[0], meta.smoke_origin_px[1]) if meta.has("smoke_origin_px") else Vector2(-1, -1),
+	}
+	for f in meta.get("part_frames", []):
+		sp.parts.append(load(dir + "/" + f))
+	for f in meta.get("smoke_frames", []):
+		sp.smoke.append(load(f))
+	return sp
+
+
+## Fiche d'un batiment pour une orientation.
+func _sheet(proto: int, d: int) -> Dictionary:
+	var sp: Dictionary = _sprites[proto]
+	return sp.dirs[d] if sp.has("dirs") else sp
+
+
 ## Points d'accroche des cables : [x, y] (ancien format) ou [[x, y], ...].
 func _wire_points(w) -> Array:
 	var pts := []
@@ -236,8 +276,8 @@ func _wire_anchors(proto: int, x: int, y: int) -> Array:
 	var sizes: PackedInt32Array = sim.proto_sizes()
 	var w := sizes[proto * 2]
 	var h := sizes[proto * 2 + 1]
-	if _sprites.has(proto) and not _sprites[proto].wires.is_empty():
-		var sp: Dictionary = _sprites[proto]
+	if _sprites.has(proto) and not _sheet(proto, 0).wires.is_empty():
+		var sp: Dictionary = _sheet(proto, 0)
 		var f := _sprite_frame(sp, x, y, w, h)
 		var out := []
 		for p in sp.wires:
@@ -595,21 +635,35 @@ func _sprite_frame(sp: Dictionary, x: int, y: int, w: int, h: int) -> Array:
 	return [tl, sc]
 
 
-func _draw_sprite_shadow(proto: int, x: int, y: int, w: int, h: int) -> void:
-	var sp: Dictionary = _sprites[proto]
+func _draw_sprite_shadow(proto: int, x: int, y: int, w: int, h: int, d := 0) -> void:
+	var sp: Dictionary = _sheet(proto, d)
 	if sp.shadow == null:
 		return
 	var f := _sprite_frame(sp, x, y, w, h)
 	draw_texture_rect(sp.shadow, Rect2(f[0], sp.canvas * f[1]), false)
 
 
-func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int) -> void:
-	var sp: Dictionary = _sprites[proto]
+func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int, e1 := 0, e2 := 0) -> void:
+	var sp: Dictionary = _sheet(proto, d)
 	var f := _sprite_frame(sp, x, y, w, h)
 	var tl: Vector2 = f[0]
 	var sc: float = f[1]
 	var rect := Rect2(tl, sp.canvas * sc)
+	var kind := proto_kinds[proto]
+	if sp.has("masks"):
+		# conduite : piece selon le masque des voisins raccordes
+		draw_texture_rect(sp.masks[clampi(e1, 0, 15)], rect, false)
+		if id == selected_id:
+			draw_rect(Rect2(tile_to_screen(x, y), Vector2(w, h) * zoom), Color(1, 1, 1, 0.9), false, maxf(2.0, zoom * 0.06))
+		return
 	draw_texture_rect(sp.base, rect, false)
+	if sp.niveau != null and kind == "tank" and e1 > 0 and e1 <= fluid_colors.size():
+		# niveau teinte selon le fluide, opacite selon le remplissage
+		var c: Color = fluid_colors[e1 - 1]
+		c.a = 0.25 + 0.75 * float(e2) / 1000.0
+		draw_texture_rect(sp.niveau, rect, false, c)
+	if sp.fermee != null and kind == "valve" and e1 == 0:
+		draw_texture_rect(sp.fermee, rect, false)
 	var working := status == 1 or status == 6
 	var tick: int = sim.tick()
 	if working and not sp.parts.is_empty():
@@ -659,7 +713,7 @@ func _draw_fx_layer() -> void:
 
 func _draw_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int, e1: int, e2: int) -> void:
 	if _sprites.has(proto):
-		_draw_sprite_entity(id, proto, x, y, w, h, d, status)
+		_draw_sprite_entity(id, proto, x, y, w, h, d, status, e1, e2)
 		return
 	var kind := proto_kinds[proto]
 	var p := tile_to_screen(x, y)
@@ -742,7 +796,7 @@ func _draw() -> void:
 	for k in n:
 		var b := k * 10
 		if _sprites.has(ents[b + 1]):
-			_draw_sprite_shadow(ents[b + 1], ents[b + 2], ents[b + 3], ents[b + 4], ents[b + 5])
+			_draw_sprite_shadow(ents[b + 1], ents[b + 2], ents[b + 3], ents[b + 4], ents[b + 5], ents[b + 6])
 	# tri par bord bas de l'emprise : un batiment haut passe devant ce qui est derriere lui
 	var order := range(n)
 	order.sort_custom(func(a: int, c: int) -> bool:

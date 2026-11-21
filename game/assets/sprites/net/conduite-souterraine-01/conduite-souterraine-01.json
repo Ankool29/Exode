@@ -1,0 +1,103 @@
+{
+  "id": "net_conduite-sout_v3",
+  "proto": "conduite_souterraine",
+  "source": "EXODE etape 3 reseaux V3",
+  "directions": {
+    "n": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        80
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "base": "net_conduite-sout_v3_n.png",
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        }
+      ]
+    },
+    "e": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        80
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "base": "net_conduite-sout_v3_e.png",
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            48
+          ]
+        }
+      ]
+    },
+    "s": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        80
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "base": "net_conduite-sout_v3_s.png",
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ]
+    },
+    "w": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        80
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "base": "net_conduite-sout_v3_w.png",
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            0,
+            48
+          ]
+        }
+      ]
+    }
+  }
+}

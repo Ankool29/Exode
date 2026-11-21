@@ -58,7 +58,19 @@ const SPRITE_SHEETS := {
 	"four": "res://assets/sprites/ent/four-01/four-01.json",
 	"foreuse": "res://assets/sprites/ent/foreuse-01/foreuse-01.json",
 	"assembleur": "res://assets/sprites/ent/assembleur-01/assembleur-01.json",
+	"coffre": "res://assets/sprites/sto/coffre-01/coffre-01.json",
+	"benne": "res://assets/sprites/wst/benne-01/benne-01.json",
+	"poteau": "res://assets/sprites/net/poteau-01/poteau-01.json",
+	"generateur": "res://assets/sprites/net/generateur-01/generateur-01.json",
 }
+## Terrain detaille (a partir de ZOOM_TERRAIN px par case) : grandes textures 256 px
+## echantillonnees selon la position, rives par masque de cotes N=1, E=2, S=4, W=8.
+const ZOOM_TERRAIN := 16.0
+var _ter := {} ## herbe, terre : texture ; eau : [4 images]
+var _trans := {} ## "eau" / "terre" -> {"mask": [16], "coin": [ne, se, sw, nw]}
+var _decals: Array = []
+var _belt_tex := {} ## h, v, courbe-ne..., fin-n...
+var _tile_cache := {} ## Vector2i -> PackedInt32Array (code de rendu par case)
 const SPR := "res://assets/sprites/"
 var _port_tex: Array = [] ## raccords de sortie N, E, S, O
 var _item_tex: Array = [] ## par objet : sprite de tapis (24 px) ou null
@@ -126,6 +138,8 @@ func _load_sprites() -> void:
 			"glow": load(dir + "/" + meta.glow) if meta.has("glow") else null,
 			"state": load(dir + "/" + meta.state) if meta.has("state") else null,
 			"ports": bool(meta.get("ports", false)),
+			"status_dot": proto_kinds[proto] in ["drill", "machine"],
+			"wire": Vector2(meta.wire_px[0], meta.wire_px[1]) if meta.has("wire_px") else Vector2(-1, -1),
 			"parts": [],
 			"part_ticks": int(meta.get("part_ticks_per_frame", 6)),
 			"smoke": [],
@@ -154,6 +168,36 @@ func _load_sprites() -> void:
 				rs.append(_try_load(SPR + "res/res_ressource-%s_f%d_r%d.png" % [char(97 + i), f + 1, r + 1]))
 			forms.append(rs)
 		_res_tex.append(forms)
+	# terrain, rives, convoyeurs
+	_ter.clear()
+	_trans.clear()
+	_decals.clear()
+	_belt_tex.clear()
+	var herbe = _try_load(SPR + "ter/ter_herbe_grand.png")
+	var terre = _try_load(SPR + "ter/ter_terre_grand.png")
+	var eau := []
+	for i in 4:
+		var t = _try_load(SPR + "ter/ter_eau_grand_frame%d.png" % i)
+		if t != null:
+			eau.append(t)
+	if herbe != null and terre != null and eau.size() == 4:
+		_ter = {"herbe": herbe, "terre": terre, "eau": eau}
+		for pair in ["eau", "terre"]:
+			var masks := []
+			for m in 16:
+				masks.append(_try_load(SPR + "ter/ter_trans-herbe-%s_%02d.png" % [pair, m]))
+			var coins := []
+			for c in ["ne", "se", "sw", "nw"]:
+				coins.append(_try_load(SPR + "ter/ter_trans-herbe-%s_coin-%s.png" % [pair, c]))
+			_trans[pair] = {"mask": masks, "coin": coins}
+		for i in 4:
+			var d = _try_load(SPR + "ter/ter_decal_v%d.png" % (i + 1))
+			if d != null:
+				_decals.append(d)
+	for k in ["h", "v", "courbe-ne", "courbe-nw", "courbe-se", "courbe-sw", "fin-n", "fin-e", "fin-s", "fin-w"]:
+		var t = _try_load(SPR + "blt/blt_tapis-1_%s.png" % k)
+		if t != null:
+			_belt_tex[k] = t
 	# arbres et rochers
 	_nat.clear()
 	for entry in [[1, "nat_arbre-feuillu", 3], [2, "nat_arbre-conifere", 2], [3, "nat_rocher-petit", 2]]:
@@ -170,9 +214,12 @@ func _try_load(path: String):
 	return load(path) if ResourceLoader.exists(path) else null
 
 
-func invalidate_terrain() -> void:
+## full : le sol a change (remblai). Sinon seuls les gisements (epuisement) sont relus.
+func invalidate_terrain(full := true) -> void:
 	_chunk_tex.clear()
 	_chunk_data.clear()
+	if full:
+		_tile_cache.clear()
 
 
 func _process(delta: float) -> void:
@@ -180,7 +227,7 @@ func _process(delta: float) -> void:
 	_refresh_timer += delta
 	if _refresh_timer > 3.0:
 		_refresh_timer = 0.0
-		invalidate_terrain()
+		invalidate_terrain(false)
 	queue_redraw()
 	if _glow_layer:
 		_glow_layer.queue_redraw()
@@ -217,8 +264,7 @@ func visible_rect() -> Rect2i:
 func _chunk_texture(key: Vector2i) -> ImageTexture:
 	if _chunk_tex.has(key):
 		return _chunk_tex[key]
-	var data: PackedByteArray = sim.chunk_data(key.x, key.y)
-	_chunk_data[key] = data
+	var data: PackedByteArray = _chunk_bytes(key)
 	var img := Image.create(CHUNK, CHUNK, false, Image.FORMAT_RGBA8)
 	for i in CHUNK * CHUNK:
 		var g := data[i]
@@ -240,17 +286,116 @@ func _chunk_texture(key: Vector2i) -> ImageTexture:
 	return tex
 
 
+func _chunk_bytes(key: Vector2i) -> PackedByteArray:
+	if not _chunk_data.has(key):
+		_chunk_data[key] = sim.chunk_data(key.x, key.y)
+	return _chunk_data[key]
+
+
+func _ground_at(tx: int, ty: int) -> int:
+	var key := Vector2i(floori(float(tx) / CHUNK), floori(float(ty) / CHUNK))
+	var data := _chunk_bytes(key)
+	return data[(ty - key.y * CHUNK) * CHUNK + (tx - key.x * CHUNK)]
+
+
+## Code de rendu d'une case : genre * 256 + indice, plus decal * 65536.
+## Genres : 0 herbe, 1 terre, 2 eau, 3 sable, 4 remblai, 5 rive eau (masque), 6 coin eau,
+## 7 rive terre (masque), 8 coin terre.
+func _tile_codes(key: Vector2i) -> PackedInt32Array:
+	if _tile_cache.has(key):
+		return _tile_cache[key]
+	var codes := PackedInt32Array()
+	codes.resize(CHUNK * CHUNK)
+	for i in CHUNK * CHUNK:
+		var tx := key.x * CHUNK + i % CHUNK
+		var ty := key.y * CHUNK + i / CHUNK
+		var g := _ground_at(tx, ty)
+		var code := 0
+		match g:
+			1: code = 1 << 8
+			2: code = 3 << 8
+			3: code = 2 << 8
+			4: code = 4 << 8
+			_:
+				code = _edge_code(tx, ty, 3, 5)
+				if code == 0:
+					code = _edge_code(tx, ty, -1, 7)
+				if code == 0:
+					var h := absi((tx * 73856093) ^ (ty * 19349663))
+					if h % 7 == 0 and not _decals.is_empty():
+						code = ((h >> 4) % _decals.size() + 1) << 16
+		codes[i] = code
+	_tile_cache[key] = codes
+	return codes
+
+
+## Rive autour d'une case d'herbe. kind = 3 : eau ; -1 : terre, sable ou remblai.
+func _edge_code(tx: int, ty: int, kind: int, base: int) -> int:
+	var is_k := func(g: int) -> bool: return g == 3 if kind == 3 else (g == 1 or g == 2 or g == 4)
+	var m := 0
+	if is_k.call(_ground_at(tx, ty - 1)): m |= 1
+	if is_k.call(_ground_at(tx + 1, ty)): m |= 2
+	if is_k.call(_ground_at(tx, ty + 1)): m |= 4
+	if is_k.call(_ground_at(tx - 1, ty)): m |= 8
+	if m != 0:
+		return (base << 8) | m
+	var corners := [[1, -1], [1, 1], [-1, 1], [-1, -1]] # ne, se, sw, nw
+	for c in 4:
+		if is_k.call(_ground_at(tx + corners[c][0], ty + corners[c][1])):
+			return ((base + 1) << 8) | c
+	return 0
+
+
+func _draw_terrain_detailed(r: Rect2i) -> void:
+	var frame: int = (sim.tick() / 8) % 4
+	var cell := Vector2(zoom + 0.5, zoom + 0.5) # leger recouvrement : pas de joint visible
+	var sand_mod := Color(1.0, 0.92, 0.68)
+	var fill_mod := Color(0.78, 0.76, 0.74)
+	for ty in range(r.position.y, r.end.y + 1):
+		for tx in range(r.position.x, r.end.x + 1):
+			var key := Vector2i(floori(float(tx) / CHUNK), floori(float(ty) / CHUNK))
+			var code: int = _tile_codes(key)[(ty - key.y * CHUNK) * CHUNK + (tx - key.x * CHUNK)]
+			var kind := (code >> 8) & 255
+			var idx := code & 255
+			var rect := Rect2(tile_to_screen(tx, ty), cell)
+			var src := Rect2(posmod(tx, 4) * 64, posmod(ty, 4) * 64, 64, 64)
+			match kind:
+				0: draw_texture_rect_region(_ter.herbe, rect, src)
+				1: draw_texture_rect_region(_ter.terre, rect, src)
+				2: draw_texture_rect_region(_ter.eau[frame], rect, src)
+				3: draw_texture_rect_region(_ter.terre, rect, src, sand_mod)
+				4: draw_texture_rect_region(_ter.terre, rect, src, fill_mod)
+				5: _draw_tex_or(_trans.eau.mask[idx], rect, _ter.herbe, src)
+				6: _draw_tex_or(_trans.eau.coin[idx], rect, _ter.herbe, src)
+				7: _draw_tex_or(_trans.terre.mask[idx], rect, _ter.herbe, src)
+				8: _draw_tex_or(_trans.terre.coin[idx], rect, _ter.herbe, src)
+			var dec := code >> 16
+			if dec > 0:
+				var off := Vector2(float((tx * 37 + ty * 11) & 31), float((tx * 13 + ty * 29) & 31)) * zoom / 64.0
+				draw_texture_rect(_decals[dec - 1], Rect2(rect.position + off, Vector2(zoom, zoom) * 0.5), false)
+
+
+func _draw_tex_or(tex, rect: Rect2, fallback: Texture2D, src: Rect2) -> void:
+	if tex != null:
+		draw_texture_rect(tex, rect, false)
+	else:
+		draw_texture_rect_region(fallback, rect, src)
+
+
 func _draw_terrain(r: Rect2i) -> void:
 	var cx0 := floori(float(r.position.x) / CHUNK)
 	var cy0 := floori(float(r.position.y) / CHUNK)
 	var cx1 := floori(float(r.end.x) / CHUNK)
 	var cy1 := floori(float(r.end.y) / CHUNK)
-	for cy in range(cy0, cy1 + 1):
-		for cx in range(cx0, cx1 + 1):
-			var key := Vector2i(cx, cy)
-			var tex := _chunk_texture(key)
-			var p := tile_to_screen(cx * CHUNK, cy * CHUNK)
-			draw_texture_rect(tex, Rect2(p, Vector2(CHUNK * zoom, CHUNK * zoom)), false)
+	if zoom >= ZOOM_TERRAIN and not _ter.is_empty():
+		_draw_terrain_detailed(r)
+	else:
+		for cy in range(cy0, cy1 + 1):
+			for cx in range(cx0, cx1 + 1):
+				var key := Vector2i(cx, cy)
+				var tex := _chunk_texture(key)
+				var p := tile_to_screen(cx * CHUNK, cy * CHUNK)
+				draw_texture_rect(tex, Rect2(p, Vector2(CHUNK * zoom, CHUNK * zoom)), false)
 	# gisements, puis arbres et rochers (au-dela d'un certain zoom)
 	if zoom < 14.0:
 		return
@@ -351,8 +496,32 @@ func _draw_item(center: Vector2, item: int, scale_f := 1.0) -> void:
 	draw_rect(rect, Color(0, 0, 0, 0.6), false, 1.0)
 
 
-func _draw_belt(x: int, y: int, d: int, curve: int) -> void:
+const DIR_LETTER := ["n", "e", "s", "w"]
+
+
+## Piece de tapis : droite, virage (cotes relies) ou extremite (pas de convoyeur devant).
+func _belt_piece(x: int, y: int, d: int, curve: int, belts: Dictionary) -> String:
+	if curve != 0:
+		var side := (d + 3) % 4 if curve == 1 else (d + 1) % 4
+		var a: String = DIR_LETTER[side]
+		var b: String = DIR_LETTER[d]
+		# nom : n ou s d'abord, puis e ou w
+		return "courbe-" + (a + b if a in ["n", "s"] else b + a)
+	var v := _dir_vec(d)
+	if not belts.has(Vector2i(x + int(v.x), y + int(v.y))):
+		return "fin-" + DIR_LETTER[d]
+	return "v" if d % 2 == 0 else "h"
+
+
+func _draw_belt(x: int, y: int, d: int, curve: int, belts := {}) -> void:
 	var p := tile_to_screen(x, y)
+	if not _belt_tex.is_empty():
+		var piece := _belt_piece(x, y, d, curve, belts)
+		if _belt_tex.has(piece):
+			draw_texture_rect(_belt_tex[piece], Rect2(p, Vector2(zoom + 0.5, zoom + 0.5)), false)
+			if curve == 0:
+				_draw_chevrons(p, d)
+			return
 	var rect := Rect2(p + Vector2(1, 1), Vector2(zoom - 2, zoom - 2))
 	draw_rect(rect, Color("34373b"))
 	draw_rect(rect, Color("1c1d1f"), false, 1.0)
@@ -361,7 +530,16 @@ func _draw_belt(x: int, y: int, d: int, curve: int) -> void:
 	var side := Vector2(-v.y, v.x)
 	# separation des deux voies
 	draw_line(c - v * zoom * 0.45, c + v * zoom * 0.45, Color(0.1, 0.1, 0.1, 0.6), 1.0)
-	# chevrons (sens de marche) ; animes par le temps de simulation
+	_draw_chevrons(p, d)
+	if curve != 0:
+		draw_circle(c, zoom * 0.07, Color(0.85, 0.65, 0.2, 0.6))
+
+
+## Chevrons du sens de marche, animes par le temps de simulation.
+func _draw_chevrons(p: Vector2, d: int) -> void:
+	var c := p + Vector2(zoom, zoom) * 0.5
+	var v := _dir_vec(d)
+	var side := Vector2(-v.y, v.x)
 	var t := fmod(float(sim.tick()) * 16.0 / 256.0, 1.0)
 	for k in 2:
 		var o := (float(k) * 0.5 + t * 0.5) - 0.5
@@ -371,8 +549,6 @@ func _draw_belt(x: int, y: int, d: int, curve: int) -> void:
 			var lc := tip + side * zoom * LANE_OFF * lane_s
 			draw_line(lc - v * zoom * 0.08 + side * zoom * 0.06, lc, col, maxf(1.0, zoom * 0.04))
 			draw_line(lc - v * zoom * 0.08 - side * zoom * 0.06, lc, col, maxf(1.0, zoom * 0.04))
-	if curve != 0:
-		draw_circle(c, zoom * 0.07, Color(0.85, 0.65, 0.2, 0.6))
 
 
 ## Coin haut-gauche du canevas et echelle, a partir de l'ancre (centre de l'emprise).
@@ -417,7 +593,7 @@ func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d:
 			_smoke_jobs.append([tex, Rect2(c - Vector2(size, size) * 0.5, Vector2(size, size)), (1.0 - phase) * 0.9])
 	if sp.state != null:
 		draw_texture_rect(sp.state, rect, false, STATUS_COLORS[status].lightened(0.15))
-	else:
+	elif sp.status_dot:
 		draw_circle(tl + Vector2(sp.canvas.x - 10.0, sp.canvas.y - 10.0) * sc, maxf(3.0, zoom * 0.09), STATUS_COLORS[status])
 	if sp.ports and _port_tex.size() == 4 and _port_tex[d] != null:
 		var edge: Vector2
@@ -505,10 +681,15 @@ func _draw() -> void:
 	var ents: PackedInt32Array = sim.entities_in_rect(r.position.x, r.position.y, r.end.x, r.end.y)
 	var n := ents.size() / 10
 	# 1. convoyeurs
+	var belts := {}
 	for k in n:
 		var b := k * 10
 		if proto_kinds[ents[b + 1]] == "belt":
-			_draw_belt(ents[b + 2], ents[b + 3], ents[b + 6], ents[b + 8])
+			belts[Vector2i(ents[b + 2], ents[b + 3])] = true
+	for k in n:
+		var b := k * 10
+		if proto_kinds[ents[b + 1]] == "belt":
+			_draw_belt(ents[b + 2], ents[b + 3], ents[b + 6], ents[b + 8], belts)
 	# 2. objets sur les convoyeurs (positions relatives a une origine proche de la camera)
 	var ox := floori(cam_x)
 	var oy := floori(cam_y)
@@ -534,9 +715,13 @@ func _draw() -> void:
 		_draw_entity(ents[b], ents[b + 1], ents[b + 2], ents[b + 3], ents[b + 4], ents[b + 5], ents[b + 6], ents[b + 7], ents[b + 8], ents[b + 9])
 	# 4. cables
 	var links: PackedInt32Array = sim.pole_links_in_rect(r.position.x - 10, r.position.y - 10, r.end.x + 10, r.end.y + 10)
+	var wire_off := Vector2.ZERO
+	var pole_proto := Array(proto_kinds).find("pole")
+	if _sprites.has(pole_proto) and _sprites[pole_proto].wire.x >= 0.0:
+		wire_off = (_sprites[pole_proto].wire - _sprites[pole_proto].anchor) * (zoom / 64.0)
 	for k in links.size() / 4:
-		var a := tile_to_screen(links[k * 4] + 0.5, links[k * 4 + 1] + 0.5)
-		var bb := tile_to_screen(links[k * 4 + 2] + 0.5, links[k * 4 + 3] + 0.5)
+		var a := tile_to_screen(links[k * 4] + 0.5, links[k * 4 + 1] + 0.5) + wire_off
+		var bb := tile_to_screen(links[k * 4 + 2] + 0.5, links[k * 4 + 3] + 0.5) + wire_off
 		draw_line(a, bb, Color("c87533"), maxf(1.0, zoom * 0.04))
 	# 5. fantome de construction et marqueur
 	if ghost_proto >= 0:

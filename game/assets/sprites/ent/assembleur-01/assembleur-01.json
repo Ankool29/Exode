@@ -1,7 +1,7 @@
 {
   "id": "ent_assembleur-01_v1",
   "proto": "assembleur",
-  "source": "EXODE P0 Pionnier V2 (palette commune candidate de 64 couleurs)",
+  "source": "EXODE P0 Pionnier V5",
   "footprint_tiles": [
     2,
     2

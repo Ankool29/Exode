@@ -19,3 +19,7 @@ Responsable : **sprites** (production graphique) ou **code** (moteur, intégrati
 | 9 | Nature | Arbres | Dessinés avant les bâtiments : un bâtiment au nord d'un arbre recouvre sa couronne | mineur | code | P0 V5 | ouvert |
 | 10 | Gisements | Correspondance ressources / fichiers | Associées par lettre (ressource-a, -b) : à remplacer par la clé de ressource du noyau | mineur | code | P0 V2 | ouvert |
 | 11 | Convoyeurs | Simulation | Corrigé (banc F1) : la boucle pleine circule ; 200 000 objets ≈ 0,01–0,02 ms/tick en mouvement, ≈ 0,001 ms bloqués (12,8 et 9–13 ms avant, serveur x86, indicatif). Reste : la pose d'un convoyeur recalcule tout le réseau (≈ 18 ms pour 25 000 convoyeurs) | moyen | code | v0.1 | corrigé (reste mineur) |
+| 12 | Réseaux | Poteau (étape 3 V3) | Peint en vert vif, hors du style acier et cuivre des autres bâtiments | mineur | sprites | Étape 3 V3 | ouvert |
+| 13 | Réseaux | Chaudière, échangeur, turbine (_n et _s) | Orientations nord et sud presque identiques : seuls les raccords changent | mineur | sprites | Étape 3 V3 | ouvert |
+| 14 | Réseaux | Sous-station | Accroches de câbles fausses dans la fiche : recalculées à la main sur les isolateurs | mineur | sprites | Étape 3 V2–V3 | corrigé dans la livraison |
+| 15 | Convoyeurs | Pose et retrait | Recalcul de toute la topologie à chaque pose : environ 14 ms pour 25 000 convoyeurs (à-coup possible en pose glissée) | mineur | code | Banc F1 | ouvert |

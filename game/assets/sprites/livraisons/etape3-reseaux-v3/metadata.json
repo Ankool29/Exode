@@ -1,0 +1,6053 @@
+{
+  "version": "EXODE_ETAPE3_RESEAUX_01",
+  "grid_px": 64,
+  "palette": "palette.json",
+  "anchor_convention": "canvas coordinates; ground footprint center",
+  "mask_exception": "pure white 255,255,255 allowed only in state and niveau masks",
+  "assets": {
+    "net/net_conduite-00.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-01.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-02.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-03.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-04.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-05.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-06.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-07.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-08.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-09.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-10.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-11.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-12.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-13.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-14.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_conduite-15.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            40
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            40
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-00.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-00_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-01.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-01_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-02.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-02_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-03.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-03_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-04.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-04_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-05.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-05_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-06.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-06_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-07.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-07_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-08.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-08_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-09.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-09_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-10.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-10_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-11.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-11_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-12.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-12_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-13.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-13_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-14.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-14_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_caloduc-15.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            63,
+            32
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            0,
+            32
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_caloduc-15_niveau.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "net/net_poteau-01.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        128
+      ],
+      "layers": [
+        "base",
+        "shadow"
+      ],
+      "frames": 1,
+      "wire_px": [
+        [
+          17,
+          30
+        ]
+      ],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 tall pole"
+    },
+    "net/net_poteau-01_shadow.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_pylone-01.png": {
+      "canvas": [
+        128,
+        288
+      ],
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "anchor_px": [
+        64,
+        224
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [
+        [
+          27,
+          11
+        ],
+        [
+          101,
+          11
+        ]
+      ],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_pylone-01_shadow.png": {
+      "canvas": [
+        128,
+        288
+      ],
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "anchor_px": [
+        64,
+        224
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow"
+    },
+    "net/net_sous-station-01.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "anchor_px": [
+        64,
+        160
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [
+        [
+          50,
+          136
+        ],
+        [
+          82,
+          136
+        ]
+      ],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2",
+      "note": "wire_px recalcules sur les isolateurs dessines (audit du 2026-11-21)"
+    },
+    "net/net_sous-station-01_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "anchor_px": [
+        64,
+        160
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_sous-station-01_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        2
+      ],
+      "anchor_px": [
+        64,
+        160
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_n.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            36
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            154
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_pompe-eau-01_n_shadow.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_pompe-eau-01_n_part-rotor_00.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_n_part-rotor_01.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_n_part-rotor_02.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_n_part-rotor_03.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_e.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            122,
+            64
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            6,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_pompe-eau-01_e_shadow.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_pompe-eau-01_e_part-rotor_00.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_e_part-rotor_01.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_e_part-rotor_02.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_e_part-rotor_03.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_s.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            154
+          ]
+        },
+        {
+          "side": "N",
+          "px": [
+            32,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_pompe-eau-01_s_shadow.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_pompe-eau-01_s_part-rotor_00.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_s_part-rotor_01.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_s_part-rotor_02.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_s_part-rotor_03.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_w.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            64
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            122,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_pompe-eau-01_w_shadow.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_pompe-eau-01_w_part-rotor_00.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_w_part-rotor_01.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_w_part-rotor_02.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-eau-01_w_part-rotor_03.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_n.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            36
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            154
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_pompe-01_n_shadow.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_pompe-01_n_state.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_n_part-rotor_00.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_n_part-rotor_01.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_n_part-rotor_02.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_n_part-rotor_03.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_e.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            122,
+            64
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            6,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_pompe-01_e_shadow.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_pompe-01_e_state.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_e_part-rotor_00.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_e_part-rotor_01.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_e_part-rotor_02.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_e_part-rotor_03.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_s.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            154
+          ]
+        },
+        {
+          "side": "N",
+          "px": [
+            32,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_pompe-01_s_shadow.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_pompe-01_s_state.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_s_part-rotor_00.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_s_part-rotor_01.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_s_part-rotor_02.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_s_part-rotor_03.png": {
+      "canvas": [
+        64,
+        160
+      ],
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_w.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            64
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            122,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_pompe-01_w_shadow.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_pompe-01_w_state.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_w_part-rotor_00.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_w_part-rotor_01.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_w_part-rotor_02.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_pompe-01_w_part-rotor_03.png": {
+      "canvas": [
+        128,
+        96
+      ],
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_n.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          64,
+          37
+        ]
+      ],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_chaudiere-01_n_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_chaudiere-01_n_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_n_glow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_n_part-fire_00.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_n_part-fire_01.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_n_part-fire_02.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_n_part-fire_03.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_e.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          96,
+          37
+        ]
+      ],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_chaudiere-01_e_shadow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_chaudiere-01_e_state.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_e_glow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_e_part-fire_00.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_e_part-fire_01.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_e_part-fire_02.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_e_part-fire_03.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_s.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          64,
+          37
+        ]
+      ],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_chaudiere-01_s_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_chaudiere-01_s_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_s_glow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_s_part-fire_00.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_s_part-fire_01.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_s_part-fire_02.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_s_part-fire_03.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_w.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "emission_px": [
+        [
+          96,
+          37
+        ]
+      ],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_chaudiere-01_w_shadow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_chaudiere-01_w_state.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_w_glow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_w_part-fire_00.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_w_part-fire_01.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_w_part-fire_02.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_chaudiere-01_w_part-fire_03.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_n.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            122,
+            128
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_echangeur-01_n_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_echangeur-01_n_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_n_glow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_e.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "S",
+          "px": [
+            96,
+            154
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_echangeur-01_e_shadow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_echangeur-01_e_state.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_e_glow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_s.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        },
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            128
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_echangeur-01_s_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_echangeur-01_s_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_s_glow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_w.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            96,
+            36
+          ]
+        }
+      ],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_echangeur-01_w_shadow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_echangeur-01_w_state.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_echangeur-01_w_glow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "glow",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_n.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_turbine-01_n_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_turbine-01_n_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_n_part-rotor_00.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_n_part-rotor_01.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_n_part-rotor_02.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_n_part-rotor_03.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_e.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_turbine-01_e_shadow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_turbine-01_e_state.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_e_part-rotor_00.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_e_part-rotor_01.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_e_part-rotor_02.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_e_part-rotor_03.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_s.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 portrait illustrated body"
+    },
+    "net/net_turbine-01_s_shadow.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V3"
+    },
+    "net/net_turbine-01_s_state.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_s_part-rotor_00.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_s_part-rotor_01.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_s_part-rotor_02.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_s_part-rotor_03.png": {
+      "canvas": [
+        128,
+        224
+      ],
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_w.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V2"
+    },
+    "net/net_turbine-01_w_shadow.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_turbine-01_w_state.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "state",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_w_part-rotor_00.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_w_part-rotor_01.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_w_part-rotor_02.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_turbine-01_w_part-rotor_03.png": {
+      "canvas": [
+        192,
+        160
+      ],
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_conduite-sout_n.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            0
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_vanne-01_n.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 directional body"
+    },
+    "net/net_vanne-01_n_shadow.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_vanne-01_n_part-fermee.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_conduite-sout_e.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            63,
+            48
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_vanne-01_e.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 directional body"
+    },
+    "net/net_vanne-01_e_shadow.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_vanne-01_e_part-fermee.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_conduite-sout_s.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            79
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_vanne-01_s.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 directional body"
+    },
+    "net/net_vanne-01_s_shadow.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_vanne-01_s_part-fermee.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_conduite-sout_w.png": {
+      "canvas": [
+        64,
+        80
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        48
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            0,
+            48
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_vanne-01_w.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body",
+      "revision": "V3 directional body"
+    },
+    "net/net_vanne-01_w_shadow.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow",
+      "revision": "V2"
+    },
+    "net/net_vanne-01_w_part-fermee.png": {
+      "canvas": [
+        64,
+        96
+      ],
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "part",
+      "revision": "V1 preserved"
+    },
+    "net/net_reservoir-01.png": {
+      "canvas": [
+        192,
+        256
+      ],
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "anchor_px": [
+        96,
+        160
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            96,
+            45
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            180,
+            160
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            96,
+            236
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            12,
+            160
+          ]
+        }
+      ],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "body"
+    },
+    "net/net_reservoir-01_shadow.png": {
+      "canvas": [
+        192,
+        256
+      ],
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "anchor_px": [
+        96,
+        160
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "shadow"
+    },
+    "net/net_reservoir-01_niveau.png": {
+      "canvas": [
+        192,
+        256
+      ],
+      "footprint_tiles": [
+        3,
+        3
+      ],
+      "anchor_px": [
+        96,
+        160
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "niveau"
+    },
+    "fx/fx_vapeur_00.png": {
+      "canvas": [
+        32,
+        32
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        16,
+        16
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "vapor"
+    },
+    "fx/fx_vapeur_01.png": {
+      "canvas": [
+        32,
+        32
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        16,
+        16
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "vapor"
+    },
+    "fx/fx_vapeur_02.png": {
+      "canvas": [
+        32,
+        32
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        16,
+        16
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "vapor"
+    },
+    "fx/fx_vapeur_03.png": {
+      "canvas": [
+        32,
+        32
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        16,
+        16
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "vapor"
+    },
+    "fx/fx_vapeur_04.png": {
+      "canvas": [
+        32,
+        32
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        16,
+        16
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "vapor"
+    },
+    "fx/fx_vapeur_05.png": {
+      "canvas": [
+        32,
+        32
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        16,
+        16
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "vapor"
+    },
+    "fx/fx_etincelle_00.png": {
+      "canvas": [
+        16,
+        16
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        8,
+        8
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "spark"
+    },
+    "fx/fx_etincelle_01.png": {
+      "canvas": [
+        16,
+        16
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        8,
+        8
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "spark"
+    },
+    "fx/fx_etincelle_02.png": {
+      "canvas": [
+        16,
+        16
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        8,
+        8
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "spark"
+    },
+    "fx/fx_etincelle_03.png": {
+      "canvas": [
+        16,
+        16
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        8,
+        8
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "spark"
+    },
+    "itm/itm_combustible_icon.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "item"
+    },
+    "itm/itm_combustible_belt.png": {
+      "canvas": [
+        24,
+        24
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        12,
+        12
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "item"
+    },
+    "itm/itm_eau_icon.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "item"
+    },
+    "itm/itm_vapeur_icon.png": {
+      "canvas": [
+        64,
+        64
+      ],
+      "footprint_tiles": [
+        0,
+        0
+      ],
+      "anchor_px": [
+        32,
+        32
+      ],
+      "layers": [
+        "base"
+      ],
+      "frames": 1,
+      "wire_px": [],
+      "fluid_ports": [],
+      "heat_ports": [],
+      "emission_px": [],
+      "role": "item"
+    }
+  },
+  "revision": "V3 portrait bodies, valves and utility pole",
+  "art_reference": "EXODE P0 Pionnier V5 furnace/foreuse",
+  "notes": [
+    "V2 files retained except the explicitly requested portrait bodies, valve bodies, pole, their shadows, metadata, QA and control previews.",
+    "V3 N/S are sourced from independently illustrated portrait-oriented artwork, not squeezed E/W sprites.",
+    "White masks are palette exceptions."
+  ]
+}

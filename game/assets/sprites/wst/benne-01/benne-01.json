@@ -1,0 +1,18 @@
+{
+  "id": "wst_benne-01_v1",
+  "proto": "benne",
+  "source": "EXODE P0 Pionnier V5",
+  "footprint_tiles": [
+    1,
+    1
+  ],
+  "canvas_px": [
+    64,
+    96
+  ],
+  "anchor_px": [
+    32,
+    64
+  ],
+  "base": "wst_benne-01_v1.png"
+}

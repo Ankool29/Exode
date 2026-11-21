@@ -42,7 +42,8 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 - Représentation compacte des convoyeurs (banc F1) : 200 000 objets sur les tapis coûtent
   environ 13 ms par tick sur un serveur x86, au-dessus du budget visé.
 - Une boucle de convoyeurs remplie à 100 %, sans aucun vide, reste immobile (limite connue).
-- Sprites : l'affichage actuel est provisoire et sera remplacé par le lot GRAPHICS-P0.
+- Sprites : lot P0 Pionnier V5 intégré (terrain, convoyeurs, machines, nature, objets) ;
+  bras et icônes encore provisoires. Défauts connus : [docs/A_CORRIGER.md](docs/A_CORRIGER.md).
 
 ## Organisation
 

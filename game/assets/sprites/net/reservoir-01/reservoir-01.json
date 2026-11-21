@@ -1,0 +1,50 @@
+{
+  "id": "net_reservoir-01_v3",
+  "proto": "reservoir",
+  "source": "EXODE etape 3 reseaux V3",
+  "footprint_tiles": [
+    3,
+    3
+  ],
+  "canvas_px": [
+    192,
+    256
+  ],
+  "anchor_px": [
+    96,
+    160
+  ],
+  "base": "net_reservoir-01_v3.png",
+  "shadow": "net_reservoir-01_v3_shadow.png",
+  "niveau": "net_reservoir-01_v3_niveau.png",
+  "fluid_ports": [
+    {
+      "side": "N",
+      "px": [
+        96,
+        45
+      ]
+    },
+    {
+      "side": "E",
+      "px": [
+        180,
+        160
+      ]
+    },
+    {
+      "side": "S",
+      "px": [
+        96,
+        236
+      ]
+    },
+    {
+      "side": "W",
+      "px": [
+        12,
+        160
+      ]
+    }
+  ]
+}

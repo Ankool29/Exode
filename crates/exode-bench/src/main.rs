@@ -6,6 +6,7 @@
 //!   exode-bench saturated <lignes> <longueur> <ticks> (F1 : lignes saturees, en mouvement puis bloquees)
 //!   exode-bench demo <copies> <ticks>               (F2/F11 : chaines completes recopiees)
 //!   exode-bench power <noeuds> <cle> <ecart> <ticks> (F3 : reseau electrique maille)
+//!   exode-bench fluids <segments> <ticks>           (F4 : segments de fluides)
 //!   exode-bench all                                 (jeu de mesures par defaut)
 
 use exode_core::scenario;
@@ -200,6 +201,46 @@ fn bench_power(nodes: i32, key: &str, spacing: i32, ticks: u64) {
     assert!(sim.mass_balance_ok(), "bilan matiere");
 }
 
+/// F4 : `segments` segments de conduites (4 conduites chacun), delimites par des vannes, en
+/// rangees partant chacune d'un reservoir plein : l'eau avance de segment en segment.
+fn bench_fluids(segments: i32, ticks: u64) {
+    let mut sim = Simulation::new(1);
+    let water = sim.content.fluid("eau").unwrap();
+    let per_row = 50;
+    let rows = (segments + per_row - 1) / per_row;
+    let mut built = 0;
+    for r in 0..rows {
+        let y = r * 4;
+        clear_put(&mut sim, "reservoir", -4, y - 1, Dir::N);
+        sim.debug_fill(Pos::new(-4, y - 1), water, 5000);
+        let mut x = -1;
+        for _ in 0..per_row {
+            if built == segments {
+                break;
+            }
+            for _ in 0..4 {
+                clear_put(&mut sim, "conduite", x, y, Dir::N);
+                x += 1;
+            }
+            clear_put(&mut sim, "vanne", x, y, Dir::E);
+            x += 1;
+            built += 1;
+        }
+    }
+    sim.run(5);
+    let t = Instant::now();
+    sim.run(ticks);
+    report(
+        &format!("F4 fluides {built} segments"),
+        &sim,
+        ticks,
+        t.elapsed().as_secs_f64(),
+    );
+    let (devs, awake, evals) = sim.fluid_device_stats();
+    println!("    appareils={devs} eveilles={awake} passages={evals}");
+    assert!(sim.mass_balance_ok(), "bilan matiere");
+}
+
 fn bench_demo(copies: i32, ticks: u64) {
     let mut sim = Simulation::new(42);
     scenario::build_demo(&mut sim).expect("scene de demonstration");
@@ -282,6 +323,7 @@ fn main() {
             num(4, 10) as i32,
             num(5, 300) as u64,
         ),
+        Some("fluids") => bench_fluids(num(2, 3000) as i32, num(3, 300) as u64),
         Some("saturated") => {
             bench_saturated(num(2, 125) as i32, num(3, 200) as i32, num(4, 150) as u64)
         }
@@ -293,6 +335,7 @@ fn main() {
             bench_saturated(125, 200, 150);
             bench_power(1500, "sous_station", 10, 300);
             bench_power(1500, "poteau", 8, 300);
+            bench_fluids(3000, 300);
             bench_demo(1, 900);
             bench_demo(100, 600);
             bench_demo(400, 300);

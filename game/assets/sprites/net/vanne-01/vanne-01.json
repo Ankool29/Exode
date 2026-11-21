@@ -1,0 +1,111 @@
+{
+  "id": "net_vanne-01_v3",
+  "proto": "vanne",
+  "source": "EXODE etape 3 reseaux V3",
+  "directions": {
+    "n": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        96
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "base": "net_vanne-01_v3_n.png",
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "shadow": "net_vanne-01_v3_n_shadow.png",
+      "fermee": "net_vanne-01_v3_n_part-fermee.png"
+    },
+    "e": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        96
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "base": "net_vanne-01_v3_e.png",
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "shadow": "net_vanne-01_v3_e_shadow.png",
+      "fermee": "net_vanne-01_v3_e_part-fermee.png"
+    },
+    "s": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        96
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "base": "net_vanne-01_v3_s.png",
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "shadow": "net_vanne-01_v3_s_shadow.png",
+      "fermee": "net_vanne-01_v3_s_part-fermee.png"
+    },
+    "w": {
+      "footprint_tiles": [
+        1,
+        1
+      ],
+      "canvas_px": [
+        64,
+        96
+      ],
+      "anchor_px": [
+        32,
+        64
+      ],
+      "base": "net_vanne-01_v3_w.png",
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            32,
+            64
+          ]
+        }
+      ],
+      "shadow": "net_vanne-01_v3_w_shadow.png",
+      "fermee": "net_vanne-01_v3_w_part-fermee.png"
+    }
+  }
+}

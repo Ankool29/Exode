@@ -56,6 +56,7 @@ var _message_timer := 0.0
 var _info_tile := Vector2i.ZERO
 var _info_open := false
 var _gear_item := -1
+var _toggle_button: Button
 
 
 func _ready() -> void:
@@ -254,7 +255,7 @@ func _on_confirm() -> void:
 			sim.build(view.ghost_proto, view.ghost_x, view.ghost_y, view.ghost_dir)
 			# pose en ligne : le fantome avance d'une case pour les convoyeurs et les poteaux
 			var kind: String = view.proto_kinds[view.ghost_proto]
-			if kind == "belt":
+			if kind == "belt" or kind == "pipe":
 				var v := view._dir_vec(view.ghost_dir)
 				view.ghost_x += int(v.x)
 				view.ghost_y += int(v.y)
@@ -324,6 +325,7 @@ func _refresh_info() -> void:
 	if info.contents != "":
 		lines.append(info.contents)
 	info_body.text = "\n".join(lines)
+	_toggle_button.visible = info.get("toggle", false)
 
 
 func _close_info() -> void:
@@ -470,6 +472,8 @@ func _build_ui() -> void:
 	iv.add_child(info_body)
 	info_recipes = VBoxContainer.new()
 	iv.add_child(info_recipes)
+	_toggle_button = _button("Ouvrir / fermer", func(): sim.toggle_at(_info_tile.x, _info_tile.y); _refresh_info(), Vector2(0, 44))
+	iv.add_child(_toggle_button)
 	info_panel.visible = false
 
 	# menu
@@ -569,13 +573,20 @@ func _screenshot(path: String) -> void:
 		if a.begins_with("--scene="):
 			# scene de controle (reseaux) posee a l'est du depart
 			_close_info()
-			sim.build_scene(a.substr(8), 60, -10)
+			var scene := a.substr(8)
+			sim.build_scene(scene, 60, -10)
 			sim.step(120)
-			view.cam_x = 68.0
-			view.cam_y = 2.0
-			view.zoom = 16.0
+			# cadrage et case inspectee de chaque scene de controle
+			var frames := {
+				"electricite": [Vector2(68, 2), 16.0, Vector2i(68, -10)],
+				"fluides": [Vector2(70, -7), 44.0, Vector2i(61, -9)],
+			}
+			var fr: Array = frames.get(scene, frames.electricite)
+			view.cam_x = fr[0].x
+			view.cam_y = fr[0].y
+			view.zoom = fr[1]
 			if "--info" in OS.get_cmdline_user_args():
-				_open_info(Vector2i(68, -10))
+				_open_info(fr[2])
 	if "--lac" in OS.get_cmdline_user_args():
 		# outil de controle : centre la vue sur le premier lac trouve
 		_close_info()
@@ -609,6 +620,7 @@ func _selftest() -> void:
 	sim.new_game(42, false)
 	var ok: bool = sim.build_demo()
 	ok = ok and sim.build_scene("electricite", 60, -10)
+	ok = ok and sim.build_scene("fluides", 60, 40)
 	sim.step(3000)
 	var h1: String = sim.state_hash()
 	var bytes: PackedByteArray = sim.save_bytes()

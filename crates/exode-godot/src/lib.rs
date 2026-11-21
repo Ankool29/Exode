@@ -78,6 +78,7 @@ impl ExodeSim {
     fn build_scene(&mut self, name: GString, x: i64, y: i64) -> bool {
         let r = match name.to_string().as_str() {
             "electricite" => scenario::build_power_demo(&mut self.sim, x as i32, y as i32),
+            "fluides" => scenario::build_fluid_demo(&mut self.sim, x as i32, y as i32),
             other => Err(format!("scene inconnue : {other}")),
         };
         match r {
@@ -152,7 +153,8 @@ impl ExodeSim {
     fn proto_names(&self) -> PackedStringArray {
         strings(self.sim.content.protos.iter().map(|p| p.name.clone()))
     }
-    /// Type de chaque batiment : belt, inserter, drill, machine, chest, waste_bin, pole, generator.
+    /// Type de chaque batiment : belt, inserter, drill, machine, chest, waste_bin, pole,
+    /// generator, pipe, pipe_underground, pump, valve, tank, water_pump.
     #[func]
     fn proto_kinds(&self) -> PackedStringArray {
         strings(self.sim.content.protos.iter().map(|p| {
@@ -165,6 +167,12 @@ impl ExodeSim {
                 ProtoKind::WasteBin => "waste_bin",
                 ProtoKind::Pole => "pole",
                 ProtoKind::Generator => "generator",
+                ProtoKind::Pipe => "pipe",
+                ProtoKind::PipeUnderground => "pipe_underground",
+                ProtoKind::Pump => "pump",
+                ProtoKind::Valve => "valve",
+                ProtoKind::Tank => "tank",
+                ProtoKind::WaterPump => "water_pump",
             }
             .to_string()
         }))
@@ -195,6 +203,14 @@ impl ExodeSim {
     #[func]
     fn item_names(&self) -> PackedStringArray {
         strings(self.sim.content.items.iter().map(|i| i.name.clone()))
+    }
+    #[func]
+    fn fluid_colors(&self) -> PackedStringArray {
+        strings(self.sim.content.fluids.iter().map(|f| f.color.clone()))
+    }
+    #[func]
+    fn fluid_names(&self) -> PackedStringArray {
+        strings(self.sim.content.fluids.iter().map(|f| f.name.clone()))
     }
     #[func]
     fn item_colors(&self) -> PackedStringArray {
@@ -301,6 +317,10 @@ impl ExodeSim {
                 exode_core::sim::BuildError::Blocked(_) => "Terrain bloque (eau, arbre ou rocher)",
                 exode_core::sim::BuildError::Occupied(_) => "Case occupee",
                 exode_core::sim::BuildError::NoResource => "Pas de gisement sous la foreuse",
+                exode_core::sim::BuildError::FluidMix => {
+                    "Cette conduite melangerait deux fluides differents"
+                }
+                exode_core::sim::BuildError::NoWater => "La pompe a eau doit tirer dans un lac",
             }),
         }
     }
@@ -319,6 +339,13 @@ impl ExodeSim {
     #[func]
     fn rotate_at(&mut self, x: i64, y: i64) -> bool {
         self.sim.rotate_at(Pos::new(x as i32, y as i32))
+    }
+    /// Ouvre ou ferme une vanne.
+    #[func]
+    fn toggle_at(&mut self, x: i64, y: i64) -> bool {
+        self.sim.apply(exode_core::Command::Toggle {
+            pos: Pos::new(x as i32, y as i32),
+        })
     }
     #[func]
     fn clear_feature(&mut self, x: i64, y: i64) -> bool {
@@ -358,7 +385,25 @@ impl ExodeSim {
             if e.pos.x > x1 || e.pos.y > y1 || e.pos.x + e.w - 1 < x0 || e.pos.y + e.h - 1 < y0 {
                 continue;
             }
+            let fluid_view = |id| {
+                self.sim
+                    .fluid_of(id)
+                    .map(|(b, cap)| {
+                        (
+                            b.fluid.map(|f| f as i32 + 1).unwrap_or(0),
+                            if cap > 0 {
+                                (b.amount * 1000 / cap) as i32
+                            } else {
+                                0
+                            },
+                        )
+                    })
+                    .unwrap_or((0, 0))
+            };
             let (ex1, ex2) = match &e.data {
+                Data::Pipe => (self.sim.pipe_mask(e.id) as i32, fluid_view(e.id).0),
+                Data::Tank(_) => fluid_view(e.id),
+                Data::Valve { open } => (*open as i32, 0),
                 Data::Belt(b) => {
                     let c = match b.curve_from {
                         Some(side) if side == e.dir.left() => 1,
@@ -599,6 +644,35 @@ impl ExodeSim {
                         .unwrap_or("rien".into())
                 ),
             ),
+            Data::Pipe | Data::Tank(_) => {
+                let mut lines = Vec::new();
+                if let Some((net, n)) = self.sim.segment_of(e.id) {
+                    lines.push(format!("Segment {net} : {n} conduites"));
+                }
+                if let Some((b, cap)) = self.sim.fluid_of(e.id) {
+                    match b.fluid {
+                        Some(f) => {
+                            lines.push(format!("Fluide : {}", c.fluids[f as usize].name));
+                            lines.push(format!("Volume : {} / {} unites", b.amount, cap));
+                            lines.push(format!("Temperature : {} C", b.temp));
+                        }
+                        None => lines.push(format!("Vide (capacite {cap} unites)")),
+                    }
+                }
+                (-1, lines.join("\n"))
+            }
+            Data::Valve { open } => (
+                -1,
+                format!(
+                    "Vanne {} (debit max {} unites par tick, sens unique)",
+                    if *open { "ouverte" } else { "fermee" },
+                    proto.flow_rate
+                ),
+            ),
+            Data::Pump | Data::WaterPump => (
+                -1,
+                format!("Debit max : {} unites par tick", proto.flow_rate),
+            ),
             Data::Pole => {
                 let links = self.sim.power_links_of(e.id);
                 let mut lines = vec![if e.status == exode_core::entity::Status::Idle {
@@ -633,6 +707,7 @@ impl ExodeSim {
             _ => (-1, String::new()),
         };
         d.set("recipe", recipe);
+        d.set("toggle", matches!(e.data, Data::Valve { .. }));
         d.set("contents", &GString::from(contents.as_str()));
         d
     }

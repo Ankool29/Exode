@@ -1,0 +1,163 @@
+{
+  "id": "net_pompe-eau-01_v3",
+  "proto": "pompe_eau",
+  "source": "EXODE etape 3 reseaux V3",
+  "directions": {
+    "n": {
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "canvas_px": [
+        64,
+        160
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "base": "net_pompe-eau-01_v3_n.png",
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            32,
+            36
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            32,
+            154
+          ]
+        }
+      ],
+      "shadow": "net_pompe-eau-01_v3_n_shadow.png",
+      "part_frames": [
+        "net_pompe-eau-01_v3_n_part-rotor_00.png",
+        "net_pompe-eau-01_v3_n_part-rotor_01.png",
+        "net_pompe-eau-01_v3_n_part-rotor_02.png",
+        "net_pompe-eau-01_v3_n_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 3
+    },
+    "e": {
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "canvas_px": [
+        128,
+        96
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "base": "net_pompe-eau-01_v3_e.png",
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            122,
+            64
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            6,
+            64
+          ]
+        }
+      ],
+      "shadow": "net_pompe-eau-01_v3_e_shadow.png",
+      "part_frames": [
+        "net_pompe-eau-01_v3_e_part-rotor_00.png",
+        "net_pompe-eau-01_v3_e_part-rotor_01.png",
+        "net_pompe-eau-01_v3_e_part-rotor_02.png",
+        "net_pompe-eau-01_v3_e_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 3
+    },
+    "s": {
+      "footprint_tiles": [
+        1,
+        2
+      ],
+      "canvas_px": [
+        64,
+        160
+      ],
+      "anchor_px": [
+        32,
+        96
+      ],
+      "base": "net_pompe-eau-01_v3_s.png",
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            32,
+            154
+          ]
+        },
+        {
+          "side": "N",
+          "px": [
+            32,
+            36
+          ]
+        }
+      ],
+      "shadow": "net_pompe-eau-01_v3_s_shadow.png",
+      "part_frames": [
+        "net_pompe-eau-01_v3_s_part-rotor_00.png",
+        "net_pompe-eau-01_v3_s_part-rotor_01.png",
+        "net_pompe-eau-01_v3_s_part-rotor_02.png",
+        "net_pompe-eau-01_v3_s_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 3
+    },
+    "w": {
+      "footprint_tiles": [
+        2,
+        1
+      ],
+      "canvas_px": [
+        128,
+        96
+      ],
+      "anchor_px": [
+        64,
+        64
+      ],
+      "base": "net_pompe-eau-01_v3_w.png",
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            64
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            122,
+            64
+          ]
+        }
+      ],
+      "shadow": "net_pompe-eau-01_v3_w_shadow.png",
+      "part_frames": [
+        "net_pompe-eau-01_v3_w_part-rotor_00.png",
+        "net_pompe-eau-01_v3_w_part-rotor_01.png",
+        "net_pompe-eau-01_v3_w_part-rotor_02.png",
+        "net_pompe-eau-01_v3_w_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 3
+    }
+  }
+}

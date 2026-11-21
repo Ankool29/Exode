@@ -26,3 +26,7 @@ Responsable : **sprites** (production graphique) ou **code** (moteur, intégrati
 | 16 | Réseaux | Poteau (étape 3 V3) | Le poteau V3 remplace le poteau P0 (gardé dans le dossier pour revenir en arrière) ; voir aussi le point 12 | mineur | sprites | Étape 3 V3 | intégré provisoirement |
 | 17 | Réseaux | Électricité | Valeurs provisoires [O] : capacités de liaison (poteau 500 kW, sous-station 20 MW, pylône 50 MW), portées, période de recalcul du flot (30 ticks) | moyen | code | Étape 3 | ouvert |
 | 18 | Réseaux | Électricité | Un tick avec recalcul du flot coûte environ 3 ms sur 1 500 sous-stations (banc F3) : à étaler entre plusieurs ticks si les appareils de référence le demandent | mineur | code | Étape 3 | ouvert |
+| 19 | Réseaux | Fluides | Valeurs provisoires [O] : volumes, débits, pompe à eau sans électricité, vanne à sens unique | moyen | code | Étape 3 | ouvert |
+| 20 | Réseaux | Raccords des bâtiments | Le raccord d'un côté occupe une case précise (milieu du côté arrondi), alors que le sprite le dessine au milieu exact pour les bâtiments de largeur paire | mineur | code | Étape 3 | ouvert |
+| 21 | Réseaux | Conduites souterraines | Une entrée peut se relier à deux sorties si l'on en pose une troisième dans le tunnel ; elle ne se tourne pas (à démonter puis reposer) | mineur | code | Étape 3 | ouvert |
+| 22 | Réseaux | Conduites | Pas de calque de niveau pour les conduites (seulement pour le réservoir) : le fluide n'est visible que dans le panneau | mineur | sprites | Étape 3 V3 | ouvert |

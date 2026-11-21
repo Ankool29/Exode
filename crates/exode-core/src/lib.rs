@@ -8,6 +8,7 @@ pub mod belts;
 mod belts_ref;
 pub mod content;
 pub mod entity;
+pub mod fluids;
 pub mod geom;
 pub mod networks;
 pub mod power;
@@ -24,5 +25,7 @@ pub use sim::{Command, Simulation, TICKS_PER_SECOND};
 mod tests;
 #[cfg(test)]
 mod tests_belts;
+#[cfg(test)]
+mod tests_fluids;
 #[cfg(test)]
 mod tests_power;

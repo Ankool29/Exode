@@ -1,6 +1,6 @@
 //! Etat des entites. Tout est en entiers et serialisable.
 
-use crate::content::{ItemId, ProtoId, RecipeId};
+use crate::content::{FluidId, ItemId, ProtoId, RecipeId};
 use crate::geom::{Dir, Pos};
 use serde::{Deserialize, Serialize};
 use std::collections::BTreeMap;
@@ -114,6 +114,54 @@ pub enum Data {
     Storage(Storage),
     Pole,
     Generator,
+    // --- reseaux de fluides (etape 3), variantes ajoutees a la fin (sauvegardes) ---
+    /// Conduite ou conduite souterraine : le fluide est tenu par le segment (`fluids.rs`).
+    Pipe,
+    Pump,
+    Valve {
+        open: bool,
+    },
+    Tank(FluidBox),
+    WaterPump,
+}
+
+/// Contenu d'un volume de fluide (segment, reservoir, tampon de machine).
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
+pub struct FluidBox {
+    pub fluid: Option<FluidId>,
+    pub amount: u64,
+    /// Degres Celsius.
+    pub temp: i32,
+}
+
+impl FluidBox {
+    /// Ajoute `amount` unites a la temperature `temp` (melange pondere, en entiers).
+    pub fn add(&mut self, fluid: FluidId, amount: u64, temp: i32) {
+        if amount == 0 {
+            return;
+        }
+        let total = self.amount + amount;
+        self.temp = ((self.amount as i64 * self.temp as i64 + amount as i64 * temp as i64)
+            / total as i64) as i32;
+        self.amount = total;
+        self.fluid = Some(fluid);
+    }
+
+    /// Retire `amount` unites (au plus ce qu'il y a).
+    pub fn remove(&mut self, amount: u64) -> u64 {
+        let m = amount.min(self.amount);
+        self.amount -= m;
+        if self.amount == 0 {
+            self.fluid = None;
+            self.temp = 0;
+        }
+        m
+    }
+
+    /// Le fluide peut-il entrer ici ?
+    pub fn accepts(&self, fluid: FluidId) -> bool {
+        self.fluid.map(|f| f == fluid).unwrap_or(true)
+    }
 }
 
 /// Etat affiche au-dessus des entites (v0.4 : explication des attentes et blocages).
@@ -157,6 +205,16 @@ impl Entity {
             && p.y >= self.pos.y
             && p.x < self.pos.x + self.w
             && p.y < self.pos.y + self.h
+    }
+    /// Case derriere l'entite, symetrique de `front_tile`.
+    pub fn back_tile(&self) -> Pos {
+        let (x, y, w, h) = (self.pos.x, self.pos.y, self.w, self.h);
+        match self.dir {
+            Dir::N => Pos::new(x, y + h),
+            Dir::E => Pos::new(x - 1, y),
+            Dir::S => Pos::new(x + w - 1, y - 1),
+            Dir::W => Pos::new(x + w, y + h - 1),
+        }
     }
     /// Case de sortie devant l'entite : case avant-gauche quand on regarde vers `dir`.
     pub fn front_tile(&self) -> Pos {

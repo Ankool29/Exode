@@ -560,8 +560,9 @@ func _show_missing_library() -> void:
 func _screenshot(path: String) -> void:
 	_new_game(true)
 	sim.step(900)
-	view.cam_x = -3.0
-	view.cam_y = 0.5
+	view.cam_x = -1.0
+	view.cam_y = 0.0
+	view.zoom = 64.0
 	_open_info(Vector2i(-2, -4))
 	_select_tool_keep_info()
 	for i in 30:

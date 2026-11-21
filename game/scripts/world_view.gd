@@ -52,6 +52,17 @@ var item_colors: Array[Color] = []
 var item_waste: PackedInt32Array
 var resource_colors: Array[Color] = []
 
+## Sprites des batiments : fiche de metadonnees par batiment (GRAPHICS-01 section 3.9).
+## Les batiments sans sprite gardent l'affichage provisoire.
+const SPRITE_SHEETS := {
+	"four": "res://assets/sprites/ent/four-01/four-01.json",
+}
+var _sprites := {} ## index de batiment -> {base, shadow, glow, parts, smoke, canvas, anchor, ...}
+var _glow_layer: Node2D
+var _fx_layer: Node2D
+var _glow_jobs: Array = [] ## [texture, rect, alpha]
+var _smoke_jobs: Array = [] ## [texture, rect, alpha]
+
 var _chunk_tex := {} ## Vector2i -> ImageTexture
 var _chunk_data := {} ## Vector2i -> PackedByteArray
 var _refresh_timer := 0.0
@@ -70,7 +81,52 @@ func setup(s) -> void:
 	for c in sim.resource_colors():
 		resource_colors.append(Color(c))
 	_font = ThemeDB.fallback_font
+	_load_sprites()
 	invalidate_terrain()
+
+
+func _ready() -> void:
+	# lueurs en mode additif, puis effets aeriens (fumee) au-dessus des batiments
+	_glow_layer = Node2D.new()
+	var mat := CanvasItemMaterial.new()
+	mat.blend_mode = CanvasItemMaterial.BLEND_MODE_ADD
+	_glow_layer.material = mat
+	add_child(_glow_layer)
+	_glow_layer.draw.connect(_draw_glow_layer)
+	_fx_layer = Node2D.new()
+	add_child(_fx_layer)
+	_fx_layer.draw.connect(_draw_fx_layer)
+
+
+func _load_sprites() -> void:
+	_sprites.clear()
+	var keys: PackedStringArray = sim.proto_keys()
+	for key in SPRITE_SHEETS:
+		var proto := Array(keys).find(key)
+		if proto < 0:
+			continue
+		var path: String = SPRITE_SHEETS[key]
+		var meta = JSON.parse_string(FileAccess.get_file_as_string(path))
+		if typeof(meta) != TYPE_DICTIONARY:
+			push_warning("fiche de sprite illisible : " + path)
+			continue
+		var dir := path.get_base_dir()
+		var sp := {
+			"canvas": Vector2(meta.canvas_px[0], meta.canvas_px[1]),
+			"anchor": Vector2(meta.anchor_px[0], meta.anchor_px[1]),
+			"base": load(dir + "/" + meta.base),
+			"shadow": load(dir + "/" + meta.shadow) if meta.has("shadow") else null,
+			"glow": load(dir + "/" + meta.glow) if meta.has("glow") else null,
+			"parts": [],
+			"part_ticks": int(meta.get("part_ticks_per_frame", 6)),
+			"smoke": [],
+			"smoke_origin": Vector2(meta.smoke_origin_px[0], meta.smoke_origin_px[1]) if meta.has("smoke_origin_px") else Vector2(-1, -1),
+		}
+		for f in meta.get("part_frames", []):
+			sp.parts.append(load(dir + "/" + f))
+		for f in meta.get("smoke_frames", []):
+			sp.smoke.append(load(f))
+		_sprites[proto] = sp
 
 
 func invalidate_terrain() -> void:
@@ -85,6 +141,9 @@ func _process(delta: float) -> void:
 		_refresh_timer = 0.0
 		invalidate_terrain()
 	queue_redraw()
+	if _glow_layer:
+		_glow_layer.queue_redraw()
+		_fx_layer.queue_redraw()
 
 
 # ---------------------------------------------------------------- reperes
@@ -243,7 +302,65 @@ func _draw_belt(x: int, y: int, d: int, curve: int) -> void:
 		draw_circle(c, zoom * 0.07, Color(0.85, 0.65, 0.2, 0.6))
 
 
+## Coin haut-gauche du canevas et echelle, a partir de l'ancre (centre de l'emprise).
+func _sprite_frame(sp: Dictionary, x: int, y: int, w: int, h: int) -> Array:
+	var sc := zoom / 64.0
+	var center := tile_to_screen(x + w * 0.5, y + h * 0.5)
+	var tl: Vector2 = center - sp.anchor * sc
+	return [tl, sc]
+
+
+func _draw_sprite_shadow(proto: int, x: int, y: int, w: int, h: int) -> void:
+	var sp: Dictionary = _sprites[proto]
+	if sp.shadow == null:
+		return
+	var f := _sprite_frame(sp, x, y, w, h)
+	draw_texture_rect(sp.shadow, Rect2(f[0], sp.canvas * f[1]), false)
+
+
+func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, status: int) -> void:
+	var sp: Dictionary = _sprites[proto]
+	var f := _sprite_frame(sp, x, y, w, h)
+	var tl: Vector2 = f[0]
+	var sc: float = f[1]
+	var rect := Rect2(tl, sp.canvas * sc)
+	draw_texture_rect(sp.base, rect, false)
+	var working := status == 1 or status == 6
+	var tick: int = sim.tick()
+	if working and not sp.parts.is_empty():
+		var frame: int = (tick / sp.part_ticks + id) % sp.parts.size()
+		draw_texture_rect(sp.parts[frame], rect, false)
+	if working and sp.glow != null:
+		var pulse := 0.8 + 0.2 * sin(float(tick + id * 13) * 0.21)
+		_glow_jobs.append([sp.glow, rect, pulse])
+	# fumee : bouffees regulieres, calculees depuis le temps de simulation
+	if working and not sp.smoke.is_empty() and sp.smoke_origin.x >= 0.0:
+		var origin: Vector2 = tl + sp.smoke_origin * sc
+		for k in 3:
+			var phase := float((tick + k * 25 + id * 7) % 75) / 75.0
+			var size := 32.0 * sc * (1.0 + phase * 0.6)
+			var c := origin + Vector2(6.0 * phase, -44.0 * phase) * sc
+			var tex: Texture2D = sp.smoke[mini(int(phase * sp.smoke.size()), sp.smoke.size() - 1)]
+			_smoke_jobs.append([tex, Rect2(c - Vector2(size, size) * 0.5, Vector2(size, size)), (1.0 - phase) * 0.9])
+	draw_circle(tl + Vector2(sp.canvas.x - 10.0, sp.canvas.y - 10.0) * sc, maxf(3.0, zoom * 0.09), STATUS_COLORS[status])
+	if id == selected_id:
+		draw_rect(Rect2(tile_to_screen(x, y), Vector2(w, h) * zoom), Color(1, 1, 1, 0.9), false, maxf(2.0, zoom * 0.06))
+
+
+func _draw_glow_layer() -> void:
+	for j in _glow_jobs:
+		_glow_layer.draw_texture_rect(j[0], j[1], false, Color(1, 1, 1, j[2]))
+
+
+func _draw_fx_layer() -> void:
+	for j in _smoke_jobs:
+		_fx_layer.draw_texture_rect(j[0], j[1], false, Color(1, 1, 1, j[2]))
+
+
 func _draw_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int, e1: int, e2: int) -> void:
+	if _sprites.has(proto):
+		_draw_sprite_entity(id, proto, x, y, w, h, status)
+		return
 	var kind := proto_kinds[proto]
 	var p := tile_to_screen(x, y)
 	var size := Vector2(w, h) * zoom
@@ -313,9 +430,21 @@ func _draw() -> void:
 	for k in items.size() / 3:
 		var c := tile_to_screen(ox + items[k * 3], oy + items[k * 3 + 1])
 		_draw_item(c, int(items[k * 3 + 2]))
-	# 3. batiments
+	# 3. ombres des batiments a sprite, puis batiments
+	_glow_jobs.clear()
+	_smoke_jobs.clear()
 	for k in n:
 		var b := k * 10
+		if _sprites.has(ents[b + 1]):
+			_draw_sprite_shadow(ents[b + 1], ents[b + 2], ents[b + 3], ents[b + 4], ents[b + 5])
+	# tri par bord bas de l'emprise : un batiment haut passe devant ce qui est derriere lui
+	var order := range(n)
+	order.sort_custom(func(a: int, c: int) -> bool:
+		var ya := ents[a * 10 + 3] + ents[a * 10 + 5]
+		var yc := ents[c * 10 + 3] + ents[c * 10 + 5]
+		return ya < yc or (ya == yc and ents[a * 10 + 2] < ents[c * 10 + 2]))
+	for k in order:
+		var b: int = k * 10
 		_draw_entity(ents[b], ents[b + 1], ents[b + 2], ents[b + 3], ents[b + 4], ents[b + 5], ents[b + 6], ents[b + 7], ents[b + 8], ents[b + 9])
 	# 4. cables
 	var links: PackedInt32Array = sim.pole_links_in_rect(r.position.x - 10, r.position.y - 10, r.end.x + 10, r.end.y + 10)

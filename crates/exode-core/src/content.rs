@@ -316,6 +316,16 @@ impl Content {
                     if p.speed == 0 {
                         errors.push(format!("batiment {} : vitesse nulle", p.key));
                     }
+                    // les lignes de transport supposent qu'un objet avance de moins d'un ecart
+                    // minimal par tick (belts.rs)
+                    if p.kind == ProtoKind::Belt && p.speed > crate::entity::SPACING {
+                        errors.push(format!(
+                            "convoyeur {} : vitesse {} superieure a l'ecart minimal {}",
+                            p.key,
+                            p.speed,
+                            crate::entity::SPACING
+                        ));
+                    }
                 }
                 _ => {}
             }

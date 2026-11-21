@@ -25,12 +25,13 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 | Terrain plat : herbe, terre, sable, lacs, forêts, rochers ; défrichement, remblai | Fait |
 | Gisements : richesse croissante avec la distance puis plateau, modes fini et infini | Fait |
 | Convoyeurs à deux voies, objets individuels, virages, insertion latérale, saturation | Fait |
+| Lignes de transport (banc F1) : coût proportionnel à l'activité, voies bloquées en veille | Fait, testé |
 | Bras mécaniques, foreuses, fours (recette automatique), assembleur, recycleur | Fait |
 | Coffres, bennes à déchets ; une machine dont la sortie de déchets est pleine s'arrête | Fait |
 | Électricité simple : générateur provisoire, poteaux, réseaux, satisfaction partielle | Fait |
 | Conservation de la matière : contrôle des recettes et bilan global en jeu | Fait |
 | Déterminisme, empreinte d'état, indépendance vis-à-vis de la caméra | Fait, testé |
-| Sauvegarde binaire versionnée, écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
+| Sauvegarde binaire versionnée (v2, lecture et conversion de la v1), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
 | Interface tactile : déplacement, pincement, aperçu fantôme, confirmation, portrait et paysage | Fait |
 | Ralentissement cohérent si le matériel sature | Fait |
 
@@ -39,9 +40,15 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 - Construction avec matériaux, inventaire, robots et chantiers (v0.4 6.3).
 - Corridors électriques à capacité, fluides, chaleur (bancs F3, F4).
 - Trains, recherche, jalons.
-- Représentation compacte des convoyeurs (banc F1) : 200 000 objets sur les tapis coûtent
-  environ 13 ms par tick sur un serveur x86, au-dessus du budget visé.
-- Une boucle de convoyeurs remplie à 100 %, sans aucun vide, reste immobile (limite connue).
+- Convoyeurs (banc F1) : les cases reliées forment des lignes de transport stockées par
+  écarts, et une voie bloquée est mise en veille. Mesures indicatives sur un serveur x86
+  (ce ne sont pas des mesures sur téléphone) : 200 000 objets sur des lignes saturées en
+  mouvement coûtent environ 0,01–0,02 ms par tick (12,8 ms avant), les mêmes lignes bloquées
+  en bout environ 0,001 ms (9 à 13 ms avant). Reste à faire : la pose d'un convoyeur recalcule
+  encore la topologie de tout le réseau (environ 18 ms pour 25 000 convoyeurs, 51 ms avant).
+- Une boucle de convoyeurs remplie à 100 % circule désormais (corrigé).
+- Limite provisoire du modèle de lignes : vitesse d'un convoyeur au plus égale à l'écart
+  minimal (64 unités par tick), vérifiée au chargement du contenu.
 - Sprites : lot P0 Pionnier V5 intégré (terrain, convoyeurs, machines, nature, objets) ;
   bras et icônes encore provisoires. Défauts connus : [docs/A_CORRIGER.md](docs/A_CORRIGER.md).
 

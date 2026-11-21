@@ -18,4 +18,4 @@ Responsable : **sprites** (production graphique) ou **code** (moteur, intégrati
 | 8 | Convoyeurs | Virages | Les chevrons animés ne sont dessinés que sur les pièces droites | mineur | code | P0 V5 | ouvert |
 | 9 | Nature | Arbres | Dessinés avant les bâtiments : un bâtiment au nord d'un arbre recouvre sa couronne | mineur | code | P0 V5 | ouvert |
 | 10 | Gisements | Correspondance ressources / fichiers | Associées par lettre (ressource-a, -b) : à remplacer par la clé de ressource du noyau | mineur | code | P0 V2 | ouvert |
-| 11 | Convoyeurs | Simulation | Une boucle remplie à 100 % se fige ; coût élevé au-delà de 200 000 objets (banc F1) | moyen | code | v0.1 | ouvert |
+| 11 | Convoyeurs | Simulation | Corrigé (banc F1) : la boucle pleine circule ; 200 000 objets ≈ 0,01–0,02 ms/tick en mouvement, ≈ 0,001 ms bloqués (12,8 et 9–13 ms avant, serveur x86, indicatif). Reste : la pose d'un convoyeur recalcule tout le réseau (≈ 18 ms pour 25 000 convoyeurs) | moyen | code | v0.1 | corrigé (reste mineur) |

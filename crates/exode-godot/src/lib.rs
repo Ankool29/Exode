@@ -11,6 +11,7 @@ use exode_core::entity::{ArmState, Data, LANE_LEN};
 use exode_core::world::{Chunk, CHUNK, CHUNK_AREA, NO_RESOURCE};
 use exode_core::{scenario, Dir, Pos, Simulation, TICKS_PER_SECOND};
 use godot::prelude::*;
+use std::collections::BTreeMap;
 use std::time::Instant;
 
 struct ExodeExtension;
@@ -411,57 +412,60 @@ impl ExodeSim {
         let mut v = PackedFloat32Array::new();
         let (x0, y0, x1, y1) = (x0 as i32, y0 as i32, x1 as i32, y1 as i32);
         const LANE_OFF: f64 = 12.0 / 64.0;
+        // convoyeurs visibles, puis leurs objets (chaque ligne de transport lue une fois)
+        let mut visible: BTreeMap<u32, (Pos, Dir, Option<Dir>)> = BTreeMap::new();
         for e in self.sim.entities() {
             let Data::Belt(b) = &e.data else { continue };
             if e.pos.x < x0 || e.pos.x > x1 || e.pos.y < y0 || e.pos.y > y1 {
                 continue;
             }
-            let cx = (e.pos.x as i64 - ox) as f64 + 0.5;
-            let cy = (e.pos.y as i64 - oy) as f64 + 0.5;
-            let (dx, dy) = e.dir.delta();
+            visible.insert(e.id, (e.pos, e.dir, b.curve_from));
+        }
+        let ids: Vec<u32> = visible.keys().copied().collect();
+        self.sim.visit_belt_items(&ids, |id, lane, it| {
+            let (pos, dir, curve_from) = visible[&id];
+            let cx = (pos.x as i64 - ox) as f64 + 0.5;
+            let cy = (pos.y as i64 - oy) as f64 + 0.5;
+            let (dx, dy) = dir.delta();
             let (dx, dy) = (dx as f64, dy as f64);
             let (lx, ly) = {
-                let (a, b) = e.dir.left().delta();
+                let (a, b) = dir.left().delta();
                 (a as f64, b as f64)
             };
-            for lane in 0..2 {
-                for it in &b.lanes[lane] {
-                    let t = it.pos as f64 / LANE_LEN as f64;
-                    let (px, py) = match b.curve_from {
-                        None => {
-                            let s = if lane == 0 { LANE_OFF } else { -LANE_OFF };
-                            (cx + dx * (t - 0.5) + lx * s, cy + dy * (t - 0.5) + ly * s)
-                        }
-                        Some(side) => {
-                            let (ox_, oy_) = side.delta();
-                            let (ox_, oy_) = (ox_ as f64, oy_ as f64);
-                            let pivx = cx + (ox_ + dx) * 0.5;
-                            let pivy = cy + (oy_ + dy) * 0.5;
-                            let a0 = (-dy).atan2(-dx);
-                            let a1 = (-oy_).atan2(-ox_);
-                            let mut da = a1 - a0;
-                            while da > std::f64::consts::PI {
-                                da -= std::f64::consts::TAU;
-                            }
-                            while da < -std::f64::consts::PI {
-                                da += std::f64::consts::TAU;
-                            }
-                            let sign = lx * -ox_ + ly * -oy_;
-                            let r = if lane == 0 {
-                                0.5 + LANE_OFF * sign
-                            } else {
-                                0.5 - LANE_OFF * sign
-                            };
-                            let a = a0 + da * t;
-                            (pivx + a.cos() * r, pivy + a.sin() * r)
-                        }
-                    };
-                    v.push(px as f32);
-                    v.push(py as f32);
-                    v.push(it.item as f32);
+            let t = it.pos as f64 / LANE_LEN as f64;
+            let (px, py) = match curve_from {
+                None => {
+                    let s = if lane == 0 { LANE_OFF } else { -LANE_OFF };
+                    (cx + dx * (t - 0.5) + lx * s, cy + dy * (t - 0.5) + ly * s)
                 }
-            }
-        }
+                Some(side) => {
+                    let (ox_, oy_) = side.delta();
+                    let (ox_, oy_) = (ox_ as f64, oy_ as f64);
+                    let pivx = cx + (ox_ + dx) * 0.5;
+                    let pivy = cy + (oy_ + dy) * 0.5;
+                    let a0 = (-dy).atan2(-dx);
+                    let a1 = (-oy_).atan2(-ox_);
+                    let mut da = a1 - a0;
+                    while da > std::f64::consts::PI {
+                        da -= std::f64::consts::TAU;
+                    }
+                    while da < -std::f64::consts::PI {
+                        da += std::f64::consts::TAU;
+                    }
+                    let sign = lx * -ox_ + ly * -oy_;
+                    let r = if lane == 0 {
+                        0.5 + LANE_OFF * sign
+                    } else {
+                        0.5 - LANE_OFF * sign
+                    };
+                    let a = a0 + da * t;
+                    (pivx + a.cos() * r, pivy + a.sin() * r)
+                }
+            };
+            v.push(px as f32);
+            v.push(py as f32);
+            v.push(it.item as f32);
+        });
         v
     }
 
@@ -534,14 +538,17 @@ impl ExodeSim {
                     item_list(&s.items)
                 ),
             ),
-            Data::Belt(b) => (
-                -1,
-                format!(
-                    "Voie gauche : {} objets, voie droite : {} objets",
-                    b.lanes[0].len(),
-                    b.lanes[1].len()
-                ),
-            ),
+            Data::Belt(_) => {
+                let lanes = self.sim.belt_lanes(e.id);
+                (
+                    -1,
+                    format!(
+                        "Voie gauche : {} objets, voie droite : {} objets",
+                        lanes[0].len(),
+                        lanes[1].len()
+                    ),
+                )
+            }
             Data::Drill(dr) => (
                 -1,
                 format!(

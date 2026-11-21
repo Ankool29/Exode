@@ -54,19 +54,45 @@ pub enum Role {
     Both,
 }
 
-/// Raccord : case voisine raccordee, cote vers lequel il regarde, role.
+/// Raccord : case voisine raccordee, cote vers lequel il regarde, role, compartiment du
+/// volume de l'appareil (echangeur : 0 eau, 1 vapeur).
 #[derive(Debug, Clone, Copy)]
 pub struct Port {
     pub tile: Pos,
     pub facing: Dir,
     pub role: Role,
+    pub slot: u8,
+}
+
+/// Raccord au milieu du cote `local` (defini pour l'orientation nord), tourne avec le batiment.
+/// Pour une largeur paire, la case est celle de droite du milieu (point 20 de A_CORRIGER).
+pub fn side_port(e: &Entity, local: Dir, role: Role, slot: u8) -> Port {
+    let facing = Dir::from_index(local as i64 + e.dir as i64);
+    Port {
+        tile: side_tile(e, facing),
+        facing,
+        role,
+        slot,
+    }
+}
+
+/// Case voisine au milieu du cote `facing` de l'emprise.
+pub fn side_tile(e: &Entity, facing: Dir) -> Pos {
+    let (x, y, w, h) = (e.pos.x, e.pos.y, e.w, e.h);
+    match facing {
+        Dir::N => Pos::new(x + w / 2, y - 1),
+        Dir::S => Pos::new(x + w / 2, y + h),
+        Dir::E => Pos::new(x + w, y + h / 2),
+        Dir::W => Pos::new(x - 1, y + h / 2),
+    }
 }
 
 /// Volume de fluide.
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Cont {
     Seg(NetId),
-    Ent(EntityId),
+    /// Volume d'un appareil et compartiment.
+    Ent(EntityId, u8),
 }
 
 /// Appareil et volumes raccordes (cache recalcule quand la topologie change).
@@ -75,7 +101,7 @@ pub(crate) struct Device {
     pub id: EntityId,
     pub kind: ProtoKind,
     pub rate: u64,
-    pub ends: Vec<(Role, Option<Cont>)>,
+    pub ends: Vec<(Role, u8, Option<Cont>)>,
     /// En veille : le dernier passage n'a rien deplace, et ne dependait que des volumes
     /// raccordes. Reveille des qu'un de ces volumes change (`stamp` > `seen`).
     pub asleep: bool,
@@ -285,54 +311,54 @@ impl Simulation {
 
     /// Raccords d'un appareil a fluide.
     pub fn fluid_ports(&self, e: &Entity) -> Vec<Port> {
-        let (x, y) = (e.pos.x, e.pos.y);
         match self.kind_of(e) {
             ProtoKind::Pump | ProtoKind::Valve => vec![
                 Port {
                     tile: e.back_tile(),
                     facing: e.dir.opposite(),
                     role: Role::In,
+                    slot: 0,
                 },
                 Port {
                     tile: e.front_tile(),
                     facing: e.dir,
                     role: Role::Out,
+                    slot: 0,
                 },
             ],
             ProtoKind::WaterPump => vec![Port {
                 tile: e.front_tile(),
                 facing: e.dir,
                 role: Role::Out,
+                slot: 0,
             }],
-            ProtoKind::Tank => vec![
-                Port {
-                    tile: Pos::new(x + e.w / 2, y - 1),
-                    facing: Dir::N,
+            // le reservoir a ses raccords aux quatre cotes, quelle que soit son orientation
+            ProtoKind::Tank => Dir::ALL
+                .into_iter()
+                .map(|d| Port {
+                    tile: side_tile(e, d),
+                    facing: d,
                     role: Role::Both,
-                },
-                Port {
-                    tile: Pos::new(x + e.w, y + e.h / 2),
-                    facing: Dir::E,
-                    role: Role::Both,
-                },
-                Port {
-                    tile: Pos::new(x + e.w / 2, y + e.h),
-                    facing: Dir::S,
-                    role: Role::Both,
-                },
-                Port {
-                    tile: Pos::new(x - 1, y + e.h / 2),
-                    facing: Dir::W,
-                    role: Role::Both,
-                },
+                    slot: 0,
+                })
+                .collect(),
+            // echangeur : eau par l'arriere, vapeur par l'avant (orientation nord : S puis N)
+            ProtoKind::Exchanger => vec![
+                side_port(e, Dir::S, Role::In, 0),
+                side_port(e, Dir::N, Role::Out, 1),
             ],
+            // turbine : vapeur par l'avant
+            ProtoKind::Turbine => vec![side_port(e, Dir::N, Role::In, 0)],
             _ => Vec::new(),
         }
     }
 
-    /// Volume propre d'un appareil (reservoir), s'il en a un.
+    /// Volume propre d'un appareil (reservoir, echangeur, turbine), s'il en a un.
     fn has_volume(kind: ProtoKind) -> bool {
-        kind == ProtoKind::Tank
+        matches!(
+            kind,
+            ProtoKind::Tank | ProtoKind::Exchanger | ProtoKind::Turbine
+        )
     }
 
     /// Ce qui est raccorde a un raccord : segment de conduites, ou volume d'un appareil dont
@@ -350,9 +376,9 @@ impl Simulation {
             let back = self
                 .fluid_ports(n)
                 .into_iter()
-                .any(|q| owner.contains(q.tile) && q.facing == port.facing.opposite());
-            if back {
-                return Some(Cont::Ent(n.id));
+                .find(|q| owner.contains(q.tile) && q.facing == port.facing.opposite());
+            if let Some(q) = back {
+                return Some(Cont::Ent(n.id, q.slot));
             }
         }
         None
@@ -401,7 +427,7 @@ impl Simulation {
             }
             let ends = ports
                 .iter()
-                .map(|&p| (p.role, self.resolve_port(e, p)))
+                .map(|&p| (p.role, p.slot, self.resolve_port(e, p)))
                 .collect();
             devs.push(Device {
                 id: e.id,
@@ -422,29 +448,34 @@ impl Simulation {
                 self.fluids.segs.get(&n).copied().unwrap_or_default(),
                 self.fluids.capacity(n),
             ),
-            Cont::Ent(id) => {
+            Cont::Ent(id, slot) => {
                 let e = &self.entities[&id];
                 let cap = self.content.protos[e.proto as usize].fluid_capacity;
-                match &e.data {
-                    Data::Tank(b) => (*b, cap),
+                match (&e.data, slot) {
+                    (Data::Tank(b), _) => (*b, cap),
+                    (Data::Exchanger(x), 0) => (x.water, cap),
+                    (Data::Exchanger(x), _) => (x.steam, cap),
+                    (Data::Turbine(t), _) => (t.steam, cap),
                     _ => (FluidBox::default(), 0),
                 }
             }
         }
     }
 
-    fn set_box(&mut self, c: Cont, b: FluidBox) {
+    pub(crate) fn set_box(&mut self, c: Cont, b: FluidBox) {
         self.fluids.seq += 1;
         self.fluids.stamp.insert(c, self.fluids.seq);
         match c {
             Cont::Seg(n) => {
                 self.fluids.segs.insert(n, b);
             }
-            Cont::Ent(id) => {
-                if let Data::Tank(t) = &mut self.entities.get_mut(&id).unwrap().data {
-                    *t = b;
-                }
-            }
+            Cont::Ent(id, slot) => match (&mut self.entities.get_mut(&id).unwrap().data, slot) {
+                (Data::Tank(t), _) => *t = b,
+                (Data::Exchanger(x), 0) => x.water = b,
+                (Data::Exchanger(x), _) => x.steam = b,
+                (Data::Turbine(t), _) => t.steam = b,
+                _ => {}
+            },
         }
     }
 
@@ -503,11 +534,11 @@ impl Simulation {
         for d in devs.iter_mut() {
             if d.asleep {
                 // reveil : un volume raccorde, ou le volume propre de l'appareil (rempli par une
-                // pompe raccordee directement ou par un ajout direct), a change depuis son
-                // dernier passage
+                // machine, un bras ou un ajout direct), a change depuis son dernier passage
                 let changed = |c: Cont| self.fluids.stamp.get(&c).copied().unwrap_or(0) > d.seen;
-                let woken = changed(Cont::Ent(d.id))
-                    || d.ends.iter().any(|(_, c)| c.map(changed).unwrap_or(false));
+                let woken = d.ends.iter().any(|&(_, slot, c)| {
+                    c.map(changed).unwrap_or(false) || changed(Cont::Ent(d.id, slot))
+                });
                 if !woken {
                     continue;
                 }
@@ -519,7 +550,7 @@ impl Simulation {
             // vrai si le resultat ne depend que des volumes raccordes et que rien n'a bouge
             let mut quiet = false;
             match d.kind {
-                ProtoKind::Pump => match (d.ends[0].1, d.ends[1].1) {
+                ProtoKind::Pump => match (d.ends[0].2, d.ends[1].2) {
                     (Some(a), Some(b)) => {
                         let (fa, _) = self.cont_box(a);
                         let (fb, cb) = self.cont_box(b);
@@ -551,7 +582,7 @@ impl Simulation {
                 },
                 ProtoKind::Valve => {
                     let open = matches!(self.entities[&d.id].data, Data::Valve { open: true });
-                    let moved = match (open, d.ends[0].1, d.ends[1].1) {
+                    let moved = match (open, d.ends[0].2, d.ends[1].2) {
                         (true, Some(a), Some(b)) => self.equalize(a, b, rate),
                         _ => 0,
                     };
@@ -560,10 +591,27 @@ impl Simulation {
                         status = Status::Working;
                     }
                 }
-                ProtoKind::Tank => {
-                    let me = Cont::Ent(d.id);
+                ProtoKind::Exchanger | ProtoKind::Turbine => {
+                    // tampons de machine : l'entree tire, la sortie pousse ; l'etat de la
+                    // machine est tenu par la chaleur ou l'electricite
                     let mut moved = 0;
-                    for &(_, end) in &d.ends {
+                    for &(role, slot, end) in &d.ends {
+                        if let Some(c) = end {
+                            let me = Cont::Ent(d.id, slot);
+                            moved += match role {
+                                Role::In => self.equalize(c, me, rate),
+                                _ => self.equalize(me, c, rate),
+                            };
+                        }
+                    }
+                    d.asleep = moved == 0;
+                    d.seen = self.fluids.seq;
+                    continue;
+                }
+                ProtoKind::Tank => {
+                    let me = Cont::Ent(d.id, 0);
+                    let mut moved = 0;
+                    for &(_, _, end) in &d.ends {
                         if let Some(c) = end {
                             let m = self.equalize(me, c, rate);
                             moved += if m == 0 {
@@ -585,7 +633,7 @@ impl Simulation {
                 }
                 ProtoKind::WaterPump => {
                     let water = self.content.fluid("eau").expect("fluide eau");
-                    match d.ends[0].1 {
+                    match d.ends[0].2 {
                         Some(c) => {
                             let (b, cap) = self.cont_box(c);
                             let n = if b.accepts(water) {
@@ -648,7 +696,7 @@ impl Simulation {
             return Some(self.cont_box(Cont::Seg(net)));
         }
         if Self::has_volume(self.kind_of(e)) {
-            return Some(self.cont_box(Cont::Ent(id)));
+            return Some(self.cont_box(Cont::Ent(id, 0)));
         }
         None
     }
@@ -667,7 +715,7 @@ impl Simulation {
         };
         let c = match self.fluids.index.net_of(id) {
             Some(n) => Cont::Seg(n),
-            None if Self::has_volume(self.kind_of(&self.entities[&id])) => Cont::Ent(id),
+            None if Self::has_volume(self.kind_of(&self.entities[&id])) => Cont::Ent(id, 0),
             None => return 0,
         };
         let (mut b, cap) = self.cont_box(c);

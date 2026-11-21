@@ -21,6 +21,8 @@ pub struct Item {
     pub mass: u64,
     pub waste: bool,
     pub color: String,
+    /// Energie liberee en brulant (W x tick ; 0 : pas un combustible).
+    pub fuel: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -43,6 +45,8 @@ pub struct Fluid {
     /// Temperature a la production, en degres Celsius.
     pub temperature: i32,
     pub color: String,
+    /// Energie utilisable portee par une unite (W x tick), pour la vapeur.
+    pub energy: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -74,6 +78,14 @@ pub enum ProtoKind {
     Tank,
     /// Pompe a eau : au bord d'un lac, produit de l'eau.
     WaterPump,
+    /// Chaudiere : brule du combustible, produit de la chaleur.
+    Boiler,
+    /// Caloduc : transporte la chaleur (relie ses quatre voisins).
+    HeatPipe,
+    /// Echangeur : chaleur + eau -> vapeur.
+    Exchanger,
+    /// Turbine : vapeur -> electricite ; vapeur evacuee comptee comme perte.
+    Turbine,
 }
 
 #[derive(Debug, Clone)]
@@ -102,6 +114,14 @@ pub struct Proto {
     pub flow_rate: u64,
     /// Portee d'une conduite souterraine (cases).
     pub reach: i32,
+    /// Capacite thermique (W x tick par degre).
+    pub heat_capacity: u64,
+    /// Puissance thermique d'une chaudiere (W).
+    pub heat_power: u64,
+    /// Temperature maximale (chaudiere) ou minimale de fonctionnement (echangeur), degres.
+    pub temperature: i32,
+    /// Puissance maximale echangee par un raccord de chaleur (W).
+    pub heat_limit: u64,
 }
 
 #[derive(Debug, Clone)]
@@ -134,6 +154,8 @@ struct RawFluid {
     temperature: i32,
     #[serde(default)]
     color: String,
+    #[serde(default)]
+    energy: u64,
 }
 
 #[derive(Deserialize)]
@@ -145,6 +167,8 @@ struct RawItem {
     waste: bool,
     #[serde(default)]
     color: String,
+    #[serde(default)]
+    fuel: u64,
 }
 
 #[derive(Deserialize)]
@@ -192,6 +216,14 @@ struct RawProto {
     flow_rate: u64,
     #[serde(default)]
     reach: i32,
+    #[serde(default)]
+    heat_capacity: u64,
+    #[serde(default)]
+    heat_power: u64,
+    #[serde(default)]
+    temperature: i32,
+    #[serde(default)]
+    heat_limit: u64,
 }
 
 impl Content {
@@ -213,6 +245,7 @@ impl Content {
                 mass: it.mass,
                 waste: it.waste,
                 color: it.color,
+                fuel: it.fuel,
             });
         }
         let lookup = |k: &str| -> Result<ItemId, String> {
@@ -267,6 +300,7 @@ impl Content {
                 mass: f.mass,
                 temperature: f.temperature,
                 color: f.color,
+                energy: f.energy,
             });
         }
         let mut proto_index = BTreeMap::new();
@@ -287,6 +321,10 @@ impl Content {
                 "valve" => ProtoKind::Valve,
                 "tank" => ProtoKind::Tank,
                 "water_pump" => ProtoKind::WaterPump,
+                "boiler" => ProtoKind::Boiler,
+                "heat_pipe" => ProtoKind::HeatPipe,
+                "exchanger" => ProtoKind::Exchanger,
+                "turbine" => ProtoKind::Turbine,
                 other => return Err(format!("type de batiment inconnu : {other}")),
             };
             if proto_index.insert(p.id.clone(), i as ProtoId).is_some() {
@@ -309,6 +347,10 @@ impl Content {
                 fluid_capacity: p.fluid_capacity,
                 flow_rate: p.flow_rate,
                 reach: p.reach,
+                heat_capacity: p.heat_capacity,
+                heat_power: p.heat_power,
+                temperature: p.temperature,
+                heat_limit: p.heat_limit,
             });
         }
         let content = Content {
@@ -409,6 +451,11 @@ impl Content {
                 ProtoKind::Pump | ProtoKind::Valve | ProtoKind::WaterPump => {
                     if p.flow_rate == 0 {
                         errors.push(format!("{} : debit nul", p.key));
+                    }
+                }
+                ProtoKind::Boiler | ProtoKind::HeatPipe | ProtoKind::Exchanger => {
+                    if p.heat_capacity == 0 {
+                        errors.push(format!("{} : capacite thermique nulle", p.key));
                     }
                 }
                 ProtoKind::Pole => {

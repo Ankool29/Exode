@@ -580,6 +580,7 @@ func _screenshot(path: String) -> void:
 			var frames := {
 				"electricite": [Vector2(68, 2), 16.0, Vector2i(68, -10)],
 				"fluides": [Vector2(70, -7), 44.0, Vector2i(61, -9)],
+				"chaleur": [Vector2(62, -13), 40.0, Vector2i(64, -9)],
 			}
 			var fr: Array = frames.get(scene, frames.electricite)
 			view.cam_x = fr[0].x
@@ -621,6 +622,7 @@ func _selftest() -> void:
 	var ok: bool = sim.build_demo()
 	ok = ok and sim.build_scene("electricite", 60, -10)
 	ok = ok and sim.build_scene("fluides", 60, 40)
+	ok = ok and sim.build_scene("chaleur", 60, 80)
 	sim.step(3000)
 	var h1: String = sim.state_hash()
 	var bytes: PackedByteArray = sim.save_bytes()

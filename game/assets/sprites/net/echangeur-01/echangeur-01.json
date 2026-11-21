@@ -1,0 +1,179 @@
+{
+  "id": "net_echangeur-01_v3",
+  "proto": "echangeur",
+  "source": "EXODE etape 3 reseaux V3",
+  "directions": {
+    "n": {
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "canvas_px": [
+        128,
+        224
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "base": "net_echangeur-01_v3_n.png",
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        },
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "E",
+          "px": [
+            122,
+            128
+          ]
+        }
+      ],
+      "shadow": "net_echangeur-01_v3_n_shadow.png",
+      "state": "net_echangeur-01_v3_n_state.png",
+      "glow": "net_echangeur-01_v3_n_glow.png"
+    },
+    "e": {
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "canvas_px": [
+        192,
+        160
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "base": "net_echangeur-01_v3_e.png",
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        },
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "S",
+          "px": [
+            96,
+            154
+          ]
+        }
+      ],
+      "shadow": "net_echangeur-01_v3_e_shadow.png",
+      "state": "net_echangeur-01_v3_e_state.png",
+      "glow": "net_echangeur-01_v3_e_glow.png"
+    },
+    "s": {
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "canvas_px": [
+        128,
+        224
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "base": "net_echangeur-01_v3_s.png",
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        },
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            128
+          ]
+        }
+      ],
+      "shadow": "net_echangeur-01_v3_s_shadow.png",
+      "state": "net_echangeur-01_v3_s_state.png",
+      "glow": "net_echangeur-01_v3_s_glow.png"
+    },
+    "w": {
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "canvas_px": [
+        192,
+        160
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "base": "net_echangeur-01_v3_w.png",
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        },
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "heat_ports": [
+        {
+          "side": "N",
+          "px": [
+            96,
+            36
+          ]
+        }
+      ],
+      "shadow": "net_echangeur-01_v3_w_shadow.png",
+      "state": "net_echangeur-01_v3_w_state.png",
+      "glow": "net_echangeur-01_v3_w_glow.png"
+    }
+  }
+}

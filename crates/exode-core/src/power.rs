@@ -333,13 +333,14 @@ impl PowerGrid {
     /// Un tick : calculs dus (changement de topologie, ou periode), puis application.
     /// `wants` : l'entite demande-t-elle de l'energie (etat du tick precedent) ;
     /// `supply` : puissance disponible d'une source pour ce tick.
-    /// Renvoie l'energie distribuee pendant ce tick (W x tick).
+    /// Renvoie la production de chaque source pendant ce tick (W x tick) ; leur somme est
+    /// l'energie distribuee.
     pub fn update(
         &mut self,
         tick: u64,
         wants: &dyn Fn(EntityId) -> bool,
         supply: &dyn Fn(EntityId, u64) -> u64,
-    ) -> u64 {
+    ) -> Vec<(EntityId, u64)> {
         if tick % FLOW_PERIOD == 0 {
             self.due.extend(self.index.nets().map(|(n, _)| *n));
         }
@@ -355,23 +356,28 @@ impl PowerGrid {
         if self.plan_dirty {
             self.rebuild_plan();
         }
-        let mut total = 0;
+        let mut produced: Vec<(EntityId, u64)> = Vec::new();
         self.last_tick.clear();
         let p = &mut self.plan;
-        let mut want_buf: Vec<bool> = Vec::new();
+        let mut src_buf: Vec<(EntityId, u64)> = Vec::new();
         for &(net, n0, n1) in &p.nets {
             let mut nt = NetTick::default();
+            src_buf.clear();
             for k in n0..n1 {
-                let (_, alloc, rated, (c0, c1), (s0, s1)) = p.nodes[k];
+                let (_, _, _, _, (s0, s1)) = p.nodes[k];
                 for &(id, pw) in &p.srcs[s0..s1] {
-                    nt.supply += supply(id, pw);
+                    let s = supply(id, pw);
+                    nt.supply += s;
+                    src_buf.push((id, s));
                 }
-                want_buf.clear();
+            }
+            // 1. satisfaction de chaque zone d'apres son allocation
+            let mut nominal = 0u64;
+            for k in n0..n1 {
+                let (_, alloc, rated, (c0, c1), _) = p.nodes[k];
                 let mut d = 0u64;
                 for &(id, pw) in &p.cons[c0..c1] {
-                    let w = wants(id);
-                    want_buf.push(w);
-                    if w {
+                    if wants(id) {
                         d += pw;
                     }
                 }
@@ -385,17 +391,48 @@ impl PowerGrid {
                 };
                 p.sat[k] = sat;
                 nt.demand += d;
-                // energie effectivement prise : chaque consommateur recoit sat pour mille
-                for (j, &(_, pw)) in p.cons[c0..c1].iter().enumerate() {
-                    if want_buf[j] {
-                        nt.delivered += pw * sat as u64 / 1000;
+                nominal += delivered;
+            }
+            // 2. une source variable (turbine) peut fournir moins que lors du calcul : la
+            //    distribution est ramenee a la production disponible ce tick
+            let scale = nominal > nt.supply;
+            for k in n0..n1 {
+                if scale {
+                    p.sat[k] = (p.sat[k] as u64 * nt.supply / nominal) as u32;
+                }
+                let (_, _, _, (c0, c1), _) = p.nodes[k];
+                let sat = p.sat[k] as u64;
+                for &(id, pw) in &p.cons[c0..c1] {
+                    if wants(id) {
+                        nt.delivered += pw * sat / 1000;
                     }
                 }
             }
-            total += nt.delivered;
+            // 3. production de chaque source, au prorata de sa disponibilite (reste aux
+            //    premieres sources) : produite = distribuee
+            if nt.supply > 0 && nt.delivered > 0 {
+                let mut given = 0;
+                let first = produced.len();
+                for &(id, s) in &src_buf {
+                    let share = (nt.delivered as u128 * s as u128 / nt.supply as u128) as u64;
+                    given += share;
+                    produced.push((id, share));
+                }
+                let mut rest = nt.delivered - given;
+                for k in 0..src_buf.len() {
+                    if rest == 0 {
+                        break;
+                    }
+                    let (_, s) = src_buf[k];
+                    let cur = &mut produced[first + k].1;
+                    let add = rest.min(s - *cur);
+                    *cur += add;
+                    rest -= add;
+                }
+            }
             self.last_tick.insert(net, nt);
         }
-        total
+        produced
     }
 
     /// Flot entier du reseau `net`.

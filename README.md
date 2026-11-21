@@ -30,17 +30,18 @@ le jeu affiche « Bibliothèque native EXODE absente ».
 | Coffres, bennes à déchets ; une machine dont la sortie de déchets est pleine s'arrête | Fait |
 | Socle commun des réseaux : composantes par union à la pose, reconstruction locale au retrait, identifiant canonique, version par réseau | Fait, testé |
 | Électricité à corridors : poteau, pylône, sous-station, liaisons à capacité, flot entier, corridor limitant affiché (câble rouge, étincelles, charge en %) | Fait, testé |
+| Chaleur : chaudière à combustible, caloducs (réseau à pertes), échangeur (chaleur + eau → vapeur), turbine (vapeur → électricité, vapeur évacuée comptée comme perte) ; bilans thermique et matière | Fait, testé |
+| Monde v2 : troisième ressource provisoire (combustible) avec un gisement près du départ ; les mondes v1 restent identiques | Fait, testé |
 | Fluides : eau et vapeur, segments de conduites, conduite souterraine, pompe (sens imposé), vanne (sens unique, ouverte ou fermée), réservoir, pompe à eau au bord d'un lac, saturation, température, mélange refusé | Fait, testé |
 | Conservation de la matière : contrôle des recettes et bilan global en jeu | Fait |
 | Déterminisme, empreinte d'état, indépendance vis-à-vis de la caméra | Fait, testé |
-| Sauvegarde binaire versionnée (v4, lecture et conversion des v1 à v3), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
+| Sauvegarde binaire versionnée (v5, lecture et conversion des v1 à v4), écriture atomique, sauvegarde auto et à la mise en arrière-plan | Fait |
 | Interface tactile : déplacement, pincement, aperçu fantôme, confirmation, portrait et paysage | Fait |
 | Ralentissement cohérent si le matériel sature | Fait |
 
 ## Pas encore fait (prochaines étapes)
 
 - Construction avec matériaux, inventaire, robots et chantiers (v0.4 6.3).
-- Chaleur : chaudière, caloduc, échangeur, turbine, combustible (étape 3, pull request suivante).
 - Trains, recherche, jalons.
 - Convoyeurs (banc F1) : les cases reliées forment des lignes de transport stockées par
   écarts, et une voie bloquée est mise en veille. Mesures indicatives sur un serveur x86
@@ -64,6 +65,11 @@ le jeu affiche « Bibliothèque native EXODE absente ».
   souterraine ne se tourne pas ; les raccords des bâtiments occupent une case précise de leur
   côté. Banc F4 (3 000 segments séparés par des vannes, serveur x86, indicatif) : environ 1 à
   1,4 ms par tick pendant que l'eau avance, et presque rien à l'équilibre (appareils en veille).
+- Chaleur (étape 3) : choix provisoires signalés [O] — origine du combustible (« ressource_c »,
+  générateur v2) ; énergies en W × tick ; combustible 120 M (4 MJ) ; chaudière 1,8 MW, 500 °C ;
+  échangeur actif à partir de 165 °C, 4 unités par tick ; vapeur 0,9 M par unité ; turbine 1,8 MW ;
+  pertes des caloducs (2 W par degré et par caloduc) ; raccord de fluide de la chaudière non
+  utilisé ; la turbine ne produit que ce qui est demandé.
 - Sprites : lot P0 Pionnier V5 intégré (terrain, convoyeurs, machines, nature, objets) ;
   bras et icônes encore provisoires. Défauts connus : [docs/A_CORRIGER.md](docs/A_CORRIGER.md).
 

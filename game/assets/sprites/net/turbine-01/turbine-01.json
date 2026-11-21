@@ -1,0 +1,191 @@
+{
+  "id": "net_turbine-01_v3",
+  "proto": "turbine",
+  "source": "EXODE etape 3 reseaux V3",
+  "directions": {
+    "n": {
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "canvas_px": [
+        128,
+        224
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "base": "net_turbine-01_v3_n.png",
+      "fluid_ports": [
+        {
+          "side": "N",
+          "px": [
+            64,
+            36
+          ]
+        }
+      ],
+      "shadow": "net_turbine-01_v3_n_shadow.png",
+      "state": "net_turbine-01_v3_n_state.png",
+      "part_frames": [
+        "net_turbine-01_v3_n_part-rotor_00.png",
+        "net_turbine-01_v3_n_part-rotor_01.png",
+        "net_turbine-01_v3_n_part-rotor_02.png",
+        "net_turbine-01_v3_n_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 2,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_vapeur_00.png",
+        "res://assets/sprites/fx/fx_vapeur_01.png",
+        "res://assets/sprites/fx/fx_vapeur_02.png",
+        "res://assets/sprites/fx/fx_vapeur_03.png",
+        "res://assets/sprites/fx/fx_vapeur_04.png",
+        "res://assets/sprites/fx/fx_vapeur_05.png"
+      ],
+      "smoke_origin_px": [
+        64,
+        30
+      ],
+      "note": "vapeur evacuee dessinee en haut du corps : pas d'emission_px dans la livraison"
+    },
+    "e": {
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "canvas_px": [
+        192,
+        160
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "base": "net_turbine-01_v3_e.png",
+      "fluid_ports": [
+        {
+          "side": "E",
+          "px": [
+            186,
+            96
+          ]
+        }
+      ],
+      "shadow": "net_turbine-01_v3_e_shadow.png",
+      "state": "net_turbine-01_v3_e_state.png",
+      "part_frames": [
+        "net_turbine-01_v3_e_part-rotor_00.png",
+        "net_turbine-01_v3_e_part-rotor_01.png",
+        "net_turbine-01_v3_e_part-rotor_02.png",
+        "net_turbine-01_v3_e_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 2,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_vapeur_00.png",
+        "res://assets/sprites/fx/fx_vapeur_01.png",
+        "res://assets/sprites/fx/fx_vapeur_02.png",
+        "res://assets/sprites/fx/fx_vapeur_03.png",
+        "res://assets/sprites/fx/fx_vapeur_04.png",
+        "res://assets/sprites/fx/fx_vapeur_05.png"
+      ],
+      "smoke_origin_px": [
+        96,
+        30
+      ],
+      "note": "vapeur evacuee dessinee en haut du corps : pas d'emission_px dans la livraison"
+    },
+    "s": {
+      "footprint_tiles": [
+        2,
+        3
+      ],
+      "canvas_px": [
+        128,
+        224
+      ],
+      "anchor_px": [
+        64,
+        128
+      ],
+      "base": "net_turbine-01_v3_s.png",
+      "fluid_ports": [
+        {
+          "side": "S",
+          "px": [
+            64,
+            218
+          ]
+        }
+      ],
+      "shadow": "net_turbine-01_v3_s_shadow.png",
+      "state": "net_turbine-01_v3_s_state.png",
+      "part_frames": [
+        "net_turbine-01_v3_s_part-rotor_00.png",
+        "net_turbine-01_v3_s_part-rotor_01.png",
+        "net_turbine-01_v3_s_part-rotor_02.png",
+        "net_turbine-01_v3_s_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 2,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_vapeur_00.png",
+        "res://assets/sprites/fx/fx_vapeur_01.png",
+        "res://assets/sprites/fx/fx_vapeur_02.png",
+        "res://assets/sprites/fx/fx_vapeur_03.png",
+        "res://assets/sprites/fx/fx_vapeur_04.png",
+        "res://assets/sprites/fx/fx_vapeur_05.png"
+      ],
+      "smoke_origin_px": [
+        64,
+        30
+      ],
+      "note": "vapeur evacuee dessinee en haut du corps : pas d'emission_px dans la livraison"
+    },
+    "w": {
+      "footprint_tiles": [
+        3,
+        2
+      ],
+      "canvas_px": [
+        192,
+        160
+      ],
+      "anchor_px": [
+        96,
+        96
+      ],
+      "base": "net_turbine-01_v3_w.png",
+      "fluid_ports": [
+        {
+          "side": "W",
+          "px": [
+            6,
+            96
+          ]
+        }
+      ],
+      "shadow": "net_turbine-01_v3_w_shadow.png",
+      "state": "net_turbine-01_v3_w_state.png",
+      "part_frames": [
+        "net_turbine-01_v3_w_part-rotor_00.png",
+        "net_turbine-01_v3_w_part-rotor_01.png",
+        "net_turbine-01_v3_w_part-rotor_02.png",
+        "net_turbine-01_v3_w_part-rotor_03.png"
+      ],
+      "part_ticks_per_frame": 2,
+      "smoke_frames": [
+        "res://assets/sprites/fx/fx_vapeur_00.png",
+        "res://assets/sprites/fx/fx_vapeur_01.png",
+        "res://assets/sprites/fx/fx_vapeur_02.png",
+        "res://assets/sprites/fx/fx_vapeur_03.png",
+        "res://assets/sprites/fx/fx_vapeur_04.png",
+        "res://assets/sprites/fx/fx_vapeur_05.png"
+      ],
+      "smoke_origin_px": [
+        96,
+        30
+      ],
+      "note": "vapeur evacuee dessinee en haut du corps : pas d'emission_px dans la livraison"
+    }
+  }
+}

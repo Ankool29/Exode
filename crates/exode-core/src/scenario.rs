@@ -174,3 +174,39 @@ pub fn build_fluid_demo(sim: &mut Simulation, ox: i32, oy: i32) -> Result<(), St
     sim.debug_fill(Pos::new(ox, oy), water, 5000);
     Ok(())
 }
+
+/// Scene de controle de la chaleur (etape 3) : reservoir d'eau -> echangeur ; chaudiere
+/// alimentee en combustible par un bras -> caloducs -> echangeur ; vapeur -> turbine, qui
+/// renforce un petit reseau (generateur provisoire, fours).
+pub fn build_heat_demo(sim: &mut Simulation, ox: i32, oy: i32) -> Result<(), String> {
+    use Dir::*;
+    let water = sim.content.fluid("eau").ok_or("fluide eau")?;
+    let fuel = sim.content.item("combustible").ok_or("combustible")?;
+    let ore = sim.content.item("minerai_a").ok_or("minerai_a")?;
+    put_clear(sim, "echangeur", ox, oy, N)?;
+    put_clear(sim, "reservoir", ox, oy + 4, N)?;
+    put_clear(sim, "conduite", ox + 1, oy + 3, N)?;
+    for x in 2..=5 {
+        put_clear(sim, "caloduc", ox + x, oy + 1, N)?;
+    }
+    for y in 0..=3 {
+        put_clear(sim, "caloduc", ox + 5, oy - y, N)?;
+    }
+    put_clear(sim, "chaudiere", ox + 4, oy - 6, N)?;
+    for y in 1..=3 {
+        put_clear(sim, "conduite", ox + 1, oy - y, N)?;
+    }
+    put_clear(sim, "turbine", ox, oy - 6, S)?;
+    put_clear(sim, "coffre", ox + 4, oy - 8, N)?;
+    put_clear(sim, "bras", ox + 4, oy - 7, S)?;
+    put_clear(sim, "generateur", ox - 6, oy - 7, N)?;
+    put_clear(sim, "poteau", ox - 2, oy - 6, N)?;
+    put_clear(sim, "poteau", ox + 3, oy - 9, N)?;
+    put_clear(sim, "four", ox - 5, oy - 10, N)?;
+    put_clear(sim, "four", ox - 3, oy - 10, N)?;
+    sim.debug_fill(Pos::new(ox, oy + 4), water, 5000);
+    sim.debug_insert(Pos::new(ox + 4, oy - 8), fuel, 200);
+    sim.debug_insert(Pos::new(ox - 5, oy - 10), ore, 8);
+    sim.debug_insert(Pos::new(ox - 3, oy - 10), ore, 8);
+    Ok(())
+}

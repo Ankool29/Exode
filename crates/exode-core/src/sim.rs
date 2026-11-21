@@ -553,7 +553,7 @@ impl Simulation {
         };
         let mut done = 0;
         for _ in 0..n {
-            if self.insert_into(id, item, Dir::S) {
+            if self.insert_into(id, item, Dir::S, false) {
                 done += 1;
             }
         }
@@ -815,7 +815,9 @@ impl Simulation {
     }
 
     /// Depose un objet dans une entite. `approach` = sens de deplacement de l'objet.
-    fn insert_into(&mut self, id: EntityId, item: ItemId, approach: Dir) -> bool {
+    /// Sur un convoyeur : `near` = voie la plus proche de la source (foreuses, qui deposent
+    /// juste devant elles) ; sinon voie eloignee (bras, qui deposent de l'autre cote).
+    fn insert_into(&mut self, id: EntityId, item: ItemId, approach: Dir, near: bool) -> bool {
         if !self.want_of(id).accepts(item, &self.content) {
             return false;
         }
@@ -833,12 +835,12 @@ impl Simulation {
         match &mut e.data {
             Data::Belt(_) => {
                 let bd = e.dir;
-                // voie eloignee de la source, comme un bras qui depose de l'autre cote
                 let from_side = approach.opposite();
+                // voie 0 = gauche dans le sens de marche, voie 1 = droite
                 let lane = if from_side == bd.left() {
-                    1
+                    if near { 0 } else { 1 }
                 } else if from_side == bd.right() {
-                    0
+                    if near { 1 } else { 0 }
                 } else if from_side == bd.opposite() {
                     1
                 } else {
@@ -995,7 +997,7 @@ impl Simulation {
                 .occ
                 .get(&front)
                 .copied()
-                .map(|t| self.insert_into(t, item, dir))
+                .map(|t| self.insert_into(t, item, dir, true))
                 .unwrap_or(false);
             let e = self.entities.get_mut(&id).unwrap();
             if delivered {
@@ -1046,7 +1048,7 @@ impl Simulation {
                     .occ
                     .get(&front)
                     .copied()
-                    .map(|t| self.insert_into(t, item, dir))
+                    .map(|t| self.insert_into(t, item, dir, true))
                     .unwrap_or(false);
                 if !delivered {
                     if let Data::Drill(d) = &mut self.entities.get_mut(&id).unwrap().data {
@@ -1213,7 +1215,7 @@ impl Simulation {
             }
             ArmState::Dropping => {
                 let item = held.expect("bras en depot sans objet");
-                let ok = dst.map(|d| self.insert_into(d, item, dir)).unwrap_or(false);
+                let ok = dst.map(|d| self.insert_into(d, item, dir, false)).unwrap_or(false);
                 let e = self.entities.get_mut(&id).unwrap();
                 e.wants_power = false;
                 if let Data::Inserter(ins) = &mut e.data {

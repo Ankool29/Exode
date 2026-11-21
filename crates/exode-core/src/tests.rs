@@ -265,3 +265,26 @@ fn build_rules() {
     assert!(s.remove_at(Pos::new(0, 0)));
     assert!(s.build_key("coffre", 0, 0, Dir::N).is_ok());
 }
+
+
+#[test]
+fn drill_drops_on_near_lane() {
+    // foreuse a l'ouest d'un convoyeur qui descend vers le sud : le minerai doit arriver
+    // sur la voie cote foreuse (ouest = voie droite d'un convoyeur oriente sud)
+    let mut s = sim();
+    s.build_key("foreuse", -11, -3, Dir::E).unwrap();
+    for y in -4..=0 {
+        s.build_key("convoyeur", -9, y, Dir::S).unwrap();
+    }
+    s.build_key("generateur", -14, 1, Dir::N).unwrap();
+    s.build_key("poteau", -10, -1, Dir::N).unwrap();
+    s.run(600);
+    let mut lanes = [0usize; 2];
+    for y in -4..=0 {
+        let l = s.belt_lanes(s.entity_at(Pos::new(-9, y)).unwrap().id);
+        lanes[0] += l[0].len();
+        lanes[1] += l[1].len();
+    }
+    assert!(lanes[1] > 0, "minerai attendu sur la voie cote foreuse");
+    assert_eq!(lanes[0], 0, "rien sur la voie eloignee");
+}

@@ -502,10 +502,12 @@ impl Simulation {
         let mut devs = std::mem::take(&mut self.fluid_devices);
         for d in devs.iter_mut() {
             if d.asleep {
-                let woken = d.ends.iter().any(|(_, c)| {
-                    c.map(|c| self.fluids.stamp.get(&c).copied().unwrap_or(0) > d.seen)
-                        .unwrap_or(false)
-                });
+                // reveil : un volume raccorde, ou le volume propre de l'appareil (rempli par une
+                // pompe raccordee directement ou par un ajout direct), a change depuis son
+                // dernier passage
+                let changed = |c: Cont| self.fluids.stamp.get(&c).copied().unwrap_or(0) > d.seen;
+                let woken = changed(Cont::Ent(d.id))
+                    || d.ends.iter().any(|(_, c)| c.map(changed).unwrap_or(false));
                 if !woken {
                     continue;
                 }

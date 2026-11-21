@@ -295,3 +295,27 @@ fn version3_saves_are_converted() {
     assert_eq!(s.state_hash(), t.state_hash());
     assert!(s.mass_balance_ok());
 }
+
+#[test]
+fn pump_feeding_a_tank_directly_wakes_it() {
+    // reservoir A - conduite - pompe raccordee directement au reservoir B - conduite -
+    // reservoir C : B, endormi tant qu'il est vide, doit se reveiller quand la pompe le
+    // remplit et transmettre l'eau a C
+    let mut s = Simulation::new(16);
+    let (ox, oy) = (800, 800);
+    put(&mut s, "reservoir", ox, oy, Dir::N);
+    put(&mut s, "conduite", ox + 3, oy + 1, Dir::N);
+    put(&mut s, "pompe", ox + 4, oy + 1, Dir::E);
+    put(&mut s, "reservoir", ox + 6, oy, Dir::N);
+    put(&mut s, "conduite", ox + 9, oy + 1, Dir::N);
+    put(&mut s, "reservoir", ox + 10, oy, Dir::N);
+    put(&mut s, "generateur", ox + 2, oy + 4, Dir::N);
+    put(&mut s, "poteau", ox + 4, oy + 3, Dir::N);
+    let water = s.content.fluid("eau").unwrap();
+    s.run(50);
+    s.debug_fill(Pos::new(ox, oy), water, 3000);
+    s.run(600);
+    assert!(amount(&s, ox + 6, oy) > 0, "la pompe remplit B");
+    assert!(amount(&s, ox + 10, oy) > 0, "B transmet a C");
+    assert!(s.mass_balance_ok());
+}

@@ -565,6 +565,22 @@ func _screenshot(path: String) -> void:
 	view.zoom = 52.0
 	_open_info(Vector2i(-2, -4))
 	_select_tool_keep_info()
+	if "--lac" in OS.get_cmdline_user_args():
+		# outil de controle : centre la vue sur le premier lac trouve
+		_close_info()
+		for rad in range(30, 400, 6):
+			var found := false
+			for a in 32:
+				var tx := int(rad * cos(a * TAU / 32.0))
+				var ty := int(rad * sin(a * TAU / 32.0))
+				if view._ground_at(tx, ty) == 3:
+					view.cam_x = tx
+					view.cam_y = ty
+					found = true
+					break
+			if found:
+				break
+		view.zoom = 40.0
 	for i in 30:
 		await get_tree().process_frame
 	var img := get_viewport().get_texture().get_image()

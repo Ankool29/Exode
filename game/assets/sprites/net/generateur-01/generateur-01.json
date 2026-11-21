@@ -1,0 +1,18 @@
+{
+  "id": "net_generateur-01_v1",
+  "proto": "generateur",
+  "source": "EXODE P0 Pionnier V5 (graphisme provisoire)",
+  "footprint_tiles": [
+    3,
+    3
+  ],
+  "canvas_px": [
+    192,
+    256
+  ],
+  "anchor_px": [
+    96,
+    160
+  ],
+  "base": "net_generateur-01_v1.png"
+}

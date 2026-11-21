@@ -1,0 +1,22 @@
+{
+  "id": "net_poteau-01_v1",
+  "proto": "poteau",
+  "source": "EXODE P0 Pionnier V5",
+  "footprint_tiles": [
+    1,
+    1
+  ],
+  "canvas_px": [
+    64,
+    160
+  ],
+  "anchor_px": [
+    32,
+    128
+  ],
+  "base": "net_poteau-01_v1.png",
+  "wire_px": [
+    32,
+    47
+  ]
+}

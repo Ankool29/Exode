@@ -1,0 +1,14 @@
+[package]
+name = "exode-godot"
+description = "Pont GDExtension entre Godot 4 et le noyau de simulation EXODE."
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+
+[lib]
+crate-type = ["cdylib"]
+
+[dependencies]
+exode-core = { path = "../exode-core" }
+# API Godot 4.4 : l'extension reste chargeable par les versions 4.4 et suivantes.
+godot = { version = "0.5", features = ["api-4-4"] }

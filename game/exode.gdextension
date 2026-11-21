@@ -1,0 +1,14 @@
+[configuration]
+
+entry_symbol = "gdext_rust_init"
+compatibility_minimum = 4.4
+reloadable = false
+
+[libraries]
+
+linux.debug.x86_64 = "res://bin/libexode_godot.linux.x86_64.so"
+linux.release.x86_64 = "res://bin/libexode_godot.linux.x86_64.so"
+android.debug.arm64 = "res://bin/libexode_godot.android.arm64.so"
+android.release.arm64 = "res://bin/libexode_godot.android.arm64.so"
+windows.debug.x86_64 = "res://bin/exode_godot.windows.x86_64.dll"
+windows.release.x86_64 = "res://bin/exode_godot.windows.x86_64.dll"

@@ -5,6 +5,7 @@
 //!   exode-bench belts <lignes> <longueur> <ticks>   (F1 : convoyeurs charges, se tassent au bout)
 //!   exode-bench saturated <lignes> <longueur> <ticks> (F1 : lignes saturees, en mouvement puis bloquees)
 //!   exode-bench demo <copies> <ticks>               (F2/F11 : chaines completes recopiees)
+//!   exode-bench power <noeuds> <cle> <ecart> <ticks> (F3 : reseau electrique maille)
 //!   exode-bench all                                 (jeu de mesures par defaut)
 
 use exode_core::scenario;
@@ -124,6 +125,81 @@ fn bench_saturated(lines: i32, length: i32, ticks: u64) {
     }
 }
 
+fn clear_put(sim: &mut Simulation, key: &str, x: i32, y: i32, d: Dir) -> bool {
+    for dy in 0..3 {
+        for dx in 0..3 {
+            let p = Pos::new(x + dx, y + dy);
+            sim.apply(Command::ClearFeature { pos: p });
+            sim.apply(Command::FillWater { pos: p });
+        }
+    }
+    sim.build_key(key, x, y, d).is_ok()
+}
+
+/// F3 : reseau electrique maille de `nodes` noeuds (`key` : sous-station ou poteau) en grille,
+/// une centrale tous les 25 noeuds, et sous chaque noeud un bras qui deplace des objets d'un
+/// coffre a l'autre (demande qui varie a chaque tick).
+fn bench_power(nodes: i32, key: &str, spacing: i32, ticks: u64) {
+    let mut sim = Simulation::new(1);
+    let side = (nodes as f64).sqrt().ceil() as i32;
+    let a = sim.content.item("minerai_a").unwrap();
+    let mut built = 0;
+    let t0 = Instant::now();
+    'grid: for gy in 0..side {
+        for gx in 0..side {
+            if built == nodes {
+                break 'grid;
+            }
+            let (x, y) = (gx * spacing, gy * spacing);
+            clear_put(&mut sim, key, x, y, Dir::N);
+            built += 1;
+            // consommateur : coffre -> bras -> coffre, juste a cote du noeud
+            clear_put(&mut sim, "coffre", x + 2, y, Dir::N);
+            clear_put(&mut sim, "bras", x + 3, y, Dir::E);
+            clear_put(&mut sim, "coffre", x + 4, y, Dir::N);
+            sim.debug_insert(Pos::new(x + 2, y), a, 500);
+            if (gx + gy * side) % 25 == 0 {
+                clear_put(&mut sim, "generateur", x + 2, y + 2, Dir::N);
+            }
+        }
+    }
+    let build_s = t0.elapsed().as_secs_f64();
+    sim.run(5);
+    let t = Instant::now();
+    let (mut flow_ticks, mut flow_s, mut max_tick) = (0u64, 0.0f64, 0.0f64);
+    for _ in 0..ticks {
+        let due = sim.tick % 30 == 0;
+        let ts = Instant::now();
+        sim.step();
+        let dt = ts.elapsed().as_secs_f64();
+        max_tick = max_tick.max(dt);
+        if due {
+            flow_ticks += 1;
+            flow_s += dt;
+        }
+    }
+    let secs = t.elapsed().as_secs_f64();
+    println!(
+        "    ticks avec calcul de flot : {:.3} ms en moyenne ; autres : {:.3} ms ; pire tick : {:.3} ms",
+        flow_s * 1000.0 / flow_ticks.max(1) as f64,
+        (secs - flow_s) * 1000.0 / (ticks - flow_ticks).max(1) as f64,
+        max_tick * 1000.0
+    );
+    report(
+        &format!("F3 reseau maille {built} x {key}"),
+        &sim,
+        ticks,
+        secs,
+    );
+    println!(
+        "    reseaux={} construction={:.1} ms calculs_de_flot={}",
+        sim.power_nets().len(),
+        build_s * 1000.0,
+        sim.power_solves()
+    );
+    assert!(sim.mass_balance_ok(), "bilan matiere");
+}
+
 fn bench_demo(copies: i32, ticks: u64) {
     let mut sim = Simulation::new(42);
     scenario::build_demo(&mut sim).expect("scene de demonstration");
@@ -200,6 +276,12 @@ fn main() {
     match args.get(1).map(|s| s.as_str()) {
         Some("belts") => bench_belts(num(2, 100) as i32, num(3, 100) as i32, num(4, 300) as u64),
         Some("demo") => bench_demo(num(2, 50) as i32, num(3, 600) as u64),
+        Some("power") => bench_power(
+            num(2, 1500) as i32,
+            args.get(3).map(|s| s.as_str()).unwrap_or("sous_station"),
+            num(4, 10) as i32,
+            num(5, 300) as u64,
+        ),
         Some("saturated") => {
             bench_saturated(num(2, 125) as i32, num(3, 200) as i32, num(4, 150) as u64)
         }
@@ -209,6 +291,8 @@ fn main() {
             bench_belts(100, 100, 300);
             bench_belts(200, 200, 150);
             bench_saturated(125, 200, 150);
+            bench_power(1500, "sous_station", 10, 300);
+            bench_power(1500, "poteau", 8, 300);
             bench_demo(1, 900);
             bench_demo(100, 600);
             bench_demo(400, 300);

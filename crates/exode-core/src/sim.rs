@@ -12,6 +12,7 @@ use crate::belts::{self, BeltBackend, LineBelts, Topology};
 use crate::content::{Content, ItemId, ProtoId, ProtoKind, RecipeId};
 use crate::entity::*;
 use crate::geom::{Dir, Pos};
+use crate::power::{Attached, NodeSpec, PowerGrid, PowerSave};
 use crate::world::{World, WorldParams, GENERATOR_VERSION};
 use serde::{Deserialize, Serialize};
 use std::collections::{BTreeMap, HashMap};
@@ -21,8 +22,9 @@ use std::hash::BuildHasherDefault;
 pub const TICKS_PER_SECOND: u32 = 30;
 pub const SAVE_MAGIC: &[u8; 4] = b"EXOD";
 /// Version 2 : objets des convoyeurs ranges a part, case par case (lignes de transport).
-/// Les sauvegardes de version 1 sont converties au chargement.
-pub const SAVE_VERSION: u32 = 2;
+/// Version 3 : reseau electrique a corridors (solutions de flot gardees entre deux calculs),
+/// bilan d'energie. Les sauvegardes des versions 1 et 2 sont converties au chargement.
+pub const SAVE_VERSION: u32 = 3;
 
 /// Hacheur deterministe (FNV-1a) pour les tables de recherche. Ces tables ne sont jamais
 /// parcourues : l'ordre de traitement vient toujours des BTreeMap.
@@ -86,12 +88,11 @@ pub enum Command {
     FillWater { pos: Pos },
 }
 
-#[derive(Debug, Clone, Default)]
-struct PowerNet {
-    supply: u64,
-    demand: u64,
-    /// Satisfaction en pour mille.
-    satisfaction: u32,
+/// Bilan d'energie (W x tick). Electricite : produite = distribuee (pas de pertes en ligne).
+#[derive(Debug, Clone, Default, Serialize, Deserialize)]
+pub struct EnergyStats {
+    pub electric_produced: u64,
+    pub electric_consumed: u64,
 }
 
 /// Objets d'un convoyeur dans la sauvegarde : voie gauche, voie droite, de l'avant vers l'arriere.
@@ -107,6 +108,39 @@ struct SaveState {
     belt_items: Vec<(EntityId, BeltLanes)>,
     chunks: Vec<((i32, i32), crate::world::Chunk)>,
     stats: Stats,
+    energy: EnergyStats,
+    /// `None` : sauvegarde d'une version anterieure, flot a recalculer au chargement.
+    power: Option<PowerSave>,
+}
+
+/// Format de la version 2 (lecture seule).
+mod v2 {
+    use super::*;
+
+    #[derive(Deserialize)]
+    pub struct SaveState {
+        pub params: WorldParams,
+        pub tick: u64,
+        pub next_id: EntityId,
+        pub entities: Vec<Entity>,
+        pub belt_items: Vec<(EntityId, BeltLanes)>,
+        pub chunks: Vec<((i32, i32), crate::world::Chunk)>,
+        pub stats: Stats,
+    }
+
+    pub fn convert(st: SaveState) -> super::SaveState {
+        super::SaveState {
+            params: st.params,
+            tick: st.tick,
+            next_id: st.next_id,
+            entities: st.entities,
+            belt_items: st.belt_items,
+            chunks: st.chunks,
+            stats: st.stats,
+            energy: EnergyStats::default(),
+            power: None,
+        }
+    }
 }
 
 /// Format de la version 1 (lecture seule) : les objets etaient dans les donnees du convoyeur.
@@ -153,8 +187,8 @@ mod v1 {
         pub wants_power: bool,
     }
 
-    /// Conversion vers le format courant.
-    pub fn convert(st: SaveState) -> super::SaveState {
+    /// Conversion vers le format de la version 2.
+    pub fn convert(st: SaveState) -> super::v2::SaveState {
         let mut entities = Vec::with_capacity(st.entities.len());
         let mut belt_items = Vec::new();
         for e in st.entities {
@@ -184,7 +218,7 @@ mod v1 {
                 wants_power: e.wants_power,
             });
         }
-        super::SaveState {
+        super::v2::SaveState {
             params: st.params,
             tick: st.tick,
             next_id: st.next_id,
@@ -222,17 +256,15 @@ pub struct Simulation {
     entities: BTreeMap<EntityId, Entity>,
     occ: FastMap<Pos, EntityId>,
     pub stats: Stats,
+    pub energy: EnergyStats,
     belts: BeltStore,
     /// Objets lus dans une sauvegarde, poses a la prochaine reconstruction des lignes.
     pending_belt_items: Vec<(EntityId, BeltLanes)>,
+    power: PowerGrid,
     // caches
     belts_dirty: bool,
+    /// Raccordements electriques a recalculer (pose ou retrait).
     power_dirty: bool,
-    nets: Vec<PowerNet>,
-    net_of: FastMap<EntityId, usize>,
-    pole_links: Vec<(EntityId, EntityId)>,
-    /// Entites raccordees hors poteaux : (id, reseau, puissance, generateur).
-    powered: Vec<(EntityId, usize, u64, bool)>,
     /// Foreuses et machines, puis bras, dans l'ordre des identifiants.
     lists_dirty: bool,
     producer_ids: Vec<EntityId>,
@@ -284,14 +316,12 @@ impl Simulation {
             entities: BTreeMap::new(),
             occ: FastMap::default(),
             stats: Stats::default(),
+            energy: EnergyStats::default(),
             belts: BeltStore::Lines(LineBelts::new()),
             pending_belt_items: Vec::new(),
+            power: PowerGrid::new(),
             belts_dirty: true,
             power_dirty: true,
-            nets: Vec::new(),
-            net_of: FastMap::default(),
-            pole_links: Vec::new(),
-            powered: Vec::new(),
             lists_dirty: true,
             producer_ids: Vec::new(),
             inserter_ids: Vec::new(),
@@ -342,27 +372,64 @@ impl Simulation {
     pub fn entity_count(&self) -> usize {
         self.entities.len()
     }
-    pub fn pole_links(&mut self) -> &[(EntityId, EntityId)] {
+    /// Liaisons electriques : (a, b, capacite W, flot W de a vers b, liaison limitante).
+    pub fn power_links(&mut self) -> Vec<(EntityId, EntityId, u64, i64, bool)> {
         self.refresh_power();
-        &self.pole_links
+        let mut v = Vec::new();
+        for (&a, _) in self.power.nodes() {
+            for &b in self.power.index.neighbors(a) {
+                if b > a {
+                    let cap = self.power.link_capacity(a, b).unwrap_or(0);
+                    let (f, lim) = self.power.link_flow(a, b).unwrap_or((0, false));
+                    v.push((a, b, cap, f, lim));
+                }
+            }
+        }
+        v
     }
-    /// Satisfaction electrique (pour mille) d'une entite, 0 si non raccordee.
-    pub fn satisfaction_of(&self, id: EntityId) -> u32 {
-        self.net_of
-            .get(&id)
-            .map(|n| self.nets[*n].satisfaction)
-            .unwrap_or(0)
-    }
-    /// (production W, demande W, satisfaction pour mille) de chaque reseau.
-    pub fn power_nets(&self) -> Vec<(u64, u64, u32)> {
-        self.nets
-            .iter()
-            .map(|n| (n.supply, n.demand, n.satisfaction))
+    /// Liaisons d'un noeud electrique : (autre noeud, capacite, flot sortant, limitante).
+    pub fn power_links_of(&self, node: EntityId) -> Vec<(EntityId, u64, i64, bool)> {
+        self.power
+            .index
+            .neighbors(node)
+            .map(|&b| {
+                let cap = self.power.link_capacity(node, b).unwrap_or(0);
+                let (f, lim) = self.power.link_flow(node, b).unwrap_or((0, false));
+                (b, cap, f, lim)
+            })
             .collect()
     }
-
-    fn proto_kind(&self, e: &Entity) -> ProtoKind {
-        self.content.protos[e.proto as usize].kind
+    /// Satisfaction electrique (pour mille) d'une entite, 0 si non raccordee.
+    /// Pour un noeud du reseau : satisfaction de sa zone.
+    pub fn satisfaction_of(&self, id: EntityId) -> u32 {
+        let node = self.power.attached_to(id).unwrap_or(id);
+        self.power.node_satisfaction(node)
+    }
+    /// Noeud electrique auquel une entite est raccordee.
+    pub fn power_node_of(&self, id: EntityId) -> Option<EntityId> {
+        self.power.attached_to(id)
+    }
+    /// (production disponible W, demande W, satisfaction pour mille) de chaque reseau,
+    /// lors du dernier tick.
+    pub fn power_nets(&self) -> Vec<(u64, u64, u32)> {
+        self.power
+            .last_tick
+            .values()
+            .map(|n| {
+                let sat = if n.demand > 0 {
+                    (n.delivered * 1000 / n.demand) as u32
+                } else if n.supply > 0 {
+                    1000
+                } else {
+                    0
+                };
+                (n.supply, n.demand, sat)
+            })
+            .collect()
+    }
+    /// Calculs de flot effectues depuis le debut (diagnostic et bancs).
+    pub fn power_solves(&self) -> u64 {
+        self.power.solves
     }
 
     // ------------------------------------------------------------------ construction
@@ -434,6 +501,10 @@ impl Simulation {
         for t in e.tiles() {
             self.occ.insert(t, id);
         }
+        if kind == ProtoKind::Pole {
+            let spec = self.node_spec(&e);
+            self.power.add_node(id, spec);
+        }
         self.entities.insert(id, e);
         if kind == ProtoKind::Belt {
             self.belts_dirty = true;
@@ -465,6 +536,9 @@ impl Simulation {
             self.occ.remove(&t);
         }
         self.stats.mass_removed += self.entity_mass(&e);
+        if matches!(e.data, Data::Pole) {
+            self.power.remove_node(id);
+        }
         if matches!(e.data, Data::Belt(_)) {
             let items = belts!(&mut self.belts, b => b.remove_tile(id));
             let c = &self.content;
@@ -655,110 +729,76 @@ impl Simulation {
 
     // ------------------------------------------------------------------ energie
 
+    /// Noeud du reseau electrique pour un poteau, un pylone ou une sous-station.
+    fn node_spec(&self, e: &Entity) -> NodeSpec {
+        let p = &self.content.protos[e.proto as usize];
+        let r = p.supply_radius;
+        NodeSpec {
+            c2: (2 * e.pos.x + e.w, 2 * e.pos.y + e.h),
+            reach: p.wire_reach,
+            capacity: p.link_capacity,
+            area: (r > 0).then(|| {
+                (
+                    e.pos.x - r,
+                    e.pos.y - r,
+                    e.pos.x + e.w - 1 + r,
+                    e.pos.y + e.h - 1 + r,
+                )
+            }),
+        }
+    }
+
+    /// Raccordements des sources et des consommateurs apres une pose ou un retrait :
+    /// premier noeud (ordre des identifiants) dont la zone touche l'emprise.
     fn refresh_power(&mut self) {
         if !self.power_dirty {
             return;
         }
         self.power_dirty = false;
-        let poles: Vec<(EntityId, Pos, i32, i32)> = self
-            .entities
-            .values()
-            .filter(|e| self.proto_kind(e) == ProtoKind::Pole)
-            .map(|e| {
-                let p = &self.content.protos[e.proto as usize];
-                (e.id, e.pos, p.supply_radius, p.wire_reach)
-            })
-            .collect();
-        // union-find sur les poteaux
-        let n = poles.len();
-        let mut parent: Vec<usize> = (0..n).collect();
-        fn find(p: &mut [usize], mut i: usize) -> usize {
-            while p[i] != i {
-                p[i] = p[p[i]];
-                i = p[i];
-            }
-            i
-        }
-        self.pole_links.clear();
-        for i in 0..n {
-            for j in 0..i {
-                let (dx, dy) = (poles[i].1.x - poles[j].1.x, poles[i].1.y - poles[j].1.y);
-                let reach = poles[i].3.min(poles[j].3);
-                if dx * dx + dy * dy <= reach * reach {
-                    let (a, b) = (find(&mut parent, i), find(&mut parent, j));
-                    if a != b {
-                        parent[a.max(b)] = a.min(b);
-                    }
-                    self.pole_links.push((poles[j].0, poles[i].0));
-                }
-            }
-        }
-        let mut root_to_net: BTreeMap<usize, usize> = BTreeMap::new();
-        self.nets.clear();
-        self.net_of.clear();
-        let mut pole_net = vec![0usize; n];
-        for (i, pn) in pole_net.iter_mut().enumerate() {
-            let r = find(&mut parent, i);
-            let next = root_to_net.len();
-            *pn = *root_to_net.entry(r).or_insert(next);
-        }
-        self.nets = vec![PowerNet::default(); root_to_net.len()];
-        for (i, p) in poles.iter().enumerate() {
-            self.net_of.insert(p.0, pole_net[i]);
-        }
-        // raccordement des autres entites : premier poteau (ordre des id) dont la zone touche l'emprise
-        self.powered.clear();
+        let mut list = Vec::new();
         for e in self.entities.values() {
             let pk = &self.content.protos[e.proto as usize];
-            let consumer = pk.power > 0 && pk.kind != ProtoKind::Pole;
-            if !consumer {
+            if pk.power == 0 || pk.kind == ProtoKind::Pole {
                 continue;
             }
-            for (i, p) in poles.iter().enumerate() {
-                let r = p.2;
-                let (x0, y0, x1, y1) = (p.1.x - r, p.1.y - r, p.1.x + r, p.1.y + r);
-                let overlap = e.pos.x <= x1
-                    && e.pos.x + e.w - 1 >= x0
-                    && e.pos.y <= y1
-                    && e.pos.y + e.h - 1 >= y0;
-                if overlap {
-                    self.net_of.insert(e.id, pole_net[i]);
-                    self.powered.push((
-                        e.id,
-                        pole_net[i],
-                        pk.power,
-                        pk.kind == ProtoKind::Generator,
-                    ));
-                    break;
-                }
+            let rect = (e.pos.x, e.pos.y, e.pos.x + e.w - 1, e.pos.y + e.h - 1);
+            if let Some(node) = self.power.find_supplier(rect) {
+                list.push((
+                    node,
+                    Attached {
+                        id: e.id,
+                        power: pk.power,
+                        source: pk.kind == ProtoKind::Generator,
+                    },
+                ));
             }
         }
+        self.power.set_attachments(list);
+        self.power.mark_topology_changes();
     }
 
     fn update_power(&mut self) {
         self.refresh_power();
-        for n in &mut self.nets {
-            n.supply = 0;
-            n.demand = 0;
-        }
-        // entites raccordees seulement (les poteaux ne consomment rien)
-        for &(id, net, power, generator) in &self.powered {
-            if generator {
-                self.nets[net].supply += power;
-            } else if self.entities[&id].wants_power {
-                self.nets[net].demand += power;
-            }
-        }
-        for n in &mut self.nets {
-            n.satisfaction = if n.demand == 0 {
-                if n.supply > 0 {
-                    1000
-                } else {
-                    0
-                }
+        let entities = &self.entities;
+        let wants = |id: EntityId| entities.get(&id).map(|e| e.wants_power).unwrap_or(false);
+        let supply = |_id: EntityId, power: u64| power;
+        let delivered = self.power.update(self.tick, &wants, &supply);
+        self.energy.electric_produced += delivered;
+        self.energy.electric_consumed += delivered;
+        // etat affiche des noeuds (voyants) : satisfaction de leur zone
+        for (node, sat, loaded) in self.power.zone_states() {
+            let st = if !loaded {
+                Status::Idle
+            } else if sat >= 1000 {
+                Status::Working
+            } else if sat > 0 {
+                Status::LowPower
             } else {
-                ((n.supply * 1000) / n.demand).min(1000) as u32
+                Status::NoPower
             };
+            if let Some(e) = self.entities.get_mut(&node) {
+                e.status = st;
+            }
         }
     }
 
@@ -838,9 +878,17 @@ impl Simulation {
                 let from_side = approach.opposite();
                 // voie 0 = gauche dans le sens de marche, voie 1 = droite
                 let lane = if from_side == bd.left() {
-                    if near { 0 } else { 1 }
+                    if near {
+                        0
+                    } else {
+                        1
+                    }
                 } else if from_side == bd.right() {
-                    if near { 1 } else { 0 }
+                    if near {
+                        1
+                    } else {
+                        0
+                    }
                 } else if from_side == bd.opposite() {
                     1
                 } else {
@@ -1215,7 +1263,9 @@ impl Simulation {
             }
             ArmState::Dropping => {
                 let item = held.expect("bras en depot sans objet");
-                let ok = dst.map(|d| self.insert_into(d, item, dir, false)).unwrap_or(false);
+                let ok = dst
+                    .map(|d| self.insert_into(d, item, dir, false))
+                    .unwrap_or(false);
                 let e = self.entities.get_mut(&id).unwrap();
                 e.wants_power = false;
                 if let Data::Inserter(ins) = &mut e.data {
@@ -1305,6 +1355,8 @@ impl Simulation {
             next_id: self.next_id,
             entities: self.entities.values().cloned().collect(),
             belt_items: self.belt_items_by_tile(),
+            energy: self.energy.clone(),
+            power: Some(self.power.save()),
             chunks: self
                 .world
                 .modified_chunks()
@@ -1332,7 +1384,12 @@ impl Simulation {
             1 => {
                 let old: v1::SaveState =
                     bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
-                v1::convert(old)
+                v2::convert(v1::convert(old))
+            }
+            2 => {
+                let old: v2::SaveState =
+                    bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?;
+                v2::convert(old)
             }
             SAVE_VERSION => bincode::deserialize(&bytes[8..]).map_err(|e| e.to_string())?,
             _ => {
@@ -1364,13 +1421,42 @@ impl Simulation {
             }
             sim.entities.insert(e.id, e);
         }
+        sim.energy = st.energy;
+        // reseau electrique : noeuds dans l'ordre des identifiants (memes liaisons, memes
+        // reseaux que pendant la partie), raccordements, puis solutions de flot sauvegardees
+        let nodes: Vec<(EntityId, NodeSpec)> = sim
+            .entities
+            .values()
+            .filter(|e| matches!(e.data, Data::Pole))
+            .map(|e| (e.id, sim.node_spec(e)))
+            .collect();
+        for (id, spec) in nodes {
+            sim.power.add_node(id, spec);
+        }
+        sim.power_dirty = true;
+        sim.refresh_power();
+        if let Some(p) = st.power {
+            sim.power.restore(p);
+        }
         sim.pending_belt_items = st.belt_items;
         sim.belts_dirty = true;
-        sim.power_dirty = true;
         sim.lists_dirty = true;
         sim.refresh_belts();
-        // Les demandes d'energie sont dans l'etat sauvegarde : le reseau se reconstruit a l'identique.
         Ok(sim)
+    }
+
+    /// Empreinte de l'etat de jeu hors bilan et solutions electriques (tests de conversion).
+    #[cfg(test)]
+    pub(crate) fn state_hash_without_power(&self) -> u64 {
+        let mut st = self.save_state();
+        st.energy = EnergyStats::default();
+        st.power = None;
+        for e in &mut st.entities {
+            if matches!(e.data, Data::Pole) {
+                e.status = Status::Idle;
+            }
+        }
+        fnv64(&bincode::serialize(&st).expect("serialisation"))
     }
 
     /// Empreinte de l'etat de jeu. Independante des chunks seulement affiches (camera).

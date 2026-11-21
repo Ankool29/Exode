@@ -34,6 +34,10 @@ Référence : *Cahier de conception consolidé EXODE v0.4*. Statuts : [V] valid�
   (`MAX_TICKS_PER_FRAME`) sans changer les règles.
 - Conservation de la matière : une recette ne peut pas produire plus de masse qu'elle n'en
   consomme ; `Simulation::mass_balance_ok` doit rester vrai.
+- Réseaux (étape 3) : socle commun `networks.rs` (composantes, identifiant canonique = plus
+  petit identifiant d'entité, version par réseau). Électricité : la puissance servie ne dépasse
+  jamais la production ni la capacité d'une liaison ; le flot est recalculé au changement de
+  topologie et toutes les `FLOW_PERIOD` ticks, et ses solutions font partie de la sauvegarde.
 - Déchets [R] : un bras ne dépose des déchets que dans une benne ou sur un convoyeur ; une
   machine dont la sortie de déchets est pleine s'arrête.
 

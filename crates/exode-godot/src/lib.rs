@@ -73,6 +73,22 @@ impl ExodeSim {
         }
     }
 
+    /// Scene de controle posee en (x, y) : "electricite".
+    #[func]
+    fn build_scene(&mut self, name: GString, x: i64, y: i64) -> bool {
+        let r = match name.to_string().as_str() {
+            "electricite" => scenario::build_power_demo(&mut self.sim, x as i32, y as i32),
+            other => Err(format!("scene inconnue : {other}")),
+        };
+        match r {
+            Ok(_) => true,
+            Err(e) => {
+                godot_warn!("scene de controle : {e}");
+                false
+            }
+        }
+    }
+
     #[func]
     fn step(&mut self, ticks: i64) {
         let t = Instant::now();
@@ -469,12 +485,14 @@ impl ExodeSim {
         v
     }
 
-    /// Liaisons entre poteaux du rectangle : x1, y1, x2, y2 (cases).
+    /// Liaisons electriques touchant le rectangle, 8 entiers par liaison : x, y et batiment de
+    /// chaque extremite (coin haut-gauche), charge en pour mille de la capacite, et 1 si la
+    /// liaison est le corridor limitant de son reseau.
     #[func]
-    fn pole_links_in_rect(&mut self, x0: i64, y0: i64, x1: i64, y1: i64) -> PackedInt32Array {
-        let links: Vec<_> = self.sim.pole_links().to_vec();
+    fn power_links_in_rect(&mut self, x0: i64, y0: i64, x1: i64, y1: i64) -> PackedInt32Array {
+        let links = self.sim.power_links();
         let mut v = PackedInt32Array::new();
-        for (a, b) in links {
+        for (a, b, cap, flow, limiting) in links {
             let (Some(ea), Some(eb)) = (self.sim.entity(a), self.sim.entity(b)) else {
                 continue;
             };
@@ -482,7 +500,21 @@ impl ExodeSim {
                 p.x >= x0 as i32 && p.x <= x1 as i32 && p.y >= y0 as i32 && p.y <= y1 as i32
             };
             if inside(ea.pos) || inside(eb.pos) {
-                for x in [ea.pos.x, ea.pos.y, eb.pos.x, eb.pos.y] {
+                let load = if cap > 0 {
+                    (flow.unsigned_abs() * 1000 / cap).min(1000) as i32
+                } else {
+                    0
+                };
+                for x in [
+                    ea.pos.x,
+                    ea.pos.y,
+                    ea.proto as i32,
+                    eb.pos.x,
+                    eb.pos.y,
+                    eb.proto as i32,
+                    load,
+                    limiting as i32,
+                ] {
                     v.push(x);
                 }
             }
@@ -567,6 +599,37 @@ impl ExodeSim {
                         .unwrap_or("rien".into())
                 ),
             ),
+            Data::Pole => {
+                let links = self.sim.power_links_of(e.id);
+                let mut lines = vec![if e.status == exode_core::entity::Status::Idle {
+                    "Zone : aucune machine raccordee".to_string()
+                } else {
+                    format!("Zone alimentee : {} %", self.sim.satisfaction_of(e.id) / 10)
+                }];
+                lines.push(format!(
+                    "Capacite de liaison : {} kW, portee {} cases",
+                    proto.link_capacity / 1000,
+                    proto.wire_reach
+                ));
+                for (other, cap, flow, lim) in links {
+                    let (ox, oy) = self
+                        .sim
+                        .entity(other)
+                        .map(|o| (o.pos.x, o.pos.y))
+                        .unwrap_or((0, 0));
+                    lines.push(format!(
+                        "Corridor vers ({ox}, {oy}) : {} % de {} kW{}",
+                        if cap > 0 {
+                            flow.unsigned_abs() * 100 / cap
+                        } else {
+                            0
+                        },
+                        cap / 1000,
+                        if lim { " - LIMITANT" } else { "" }
+                    ));
+                }
+                (-1, lines.join("\n"))
+            }
             _ => (-1, String::new()),
         };
         d.set("recipe", recipe);

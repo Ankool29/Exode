@@ -23,3 +23,6 @@ Responsable : **sprites** (production graphique) ou **code** (moteur, intégrati
 | 13 | Réseaux | Chaudière, échangeur, turbine (_n et _s) | Orientations nord et sud presque identiques : seuls les raccords changent | mineur | sprites | Étape 3 V3 | ouvert |
 | 14 | Réseaux | Sous-station | Accroches de câbles fausses dans la fiche : recalculées à la main sur les isolateurs | mineur | sprites | Étape 3 V2–V3 | corrigé dans la livraison |
 | 15 | Convoyeurs | Pose et retrait | Recalcul de toute la topologie à chaque pose : environ 14 ms pour 25 000 convoyeurs (à-coup possible en pose glissée) | mineur | code | Banc F1 | ouvert |
+| 16 | Réseaux | Poteau (étape 3 V3) | Le poteau V3 remplace le poteau P0 (gardé dans le dossier pour revenir en arrière) ; voir aussi le point 12 | mineur | sprites | Étape 3 V3 | intégré provisoirement |
+| 17 | Réseaux | Électricité | Valeurs provisoires [O] : capacités de liaison (poteau 500 kW, sous-station 20 MW, pylône 50 MW), portées, période de recalcul du flot (30 ticks) | moyen | code | Étape 3 | ouvert |
+| 18 | Réseaux | Électricité | Un tick avec recalcul du flot coûte environ 3 ms sur 1 500 sous-stations (banc F3) : à étaler entre plusieurs ticks si les appareils de référence le demandent | mineur | code | Étape 3 | ouvert |

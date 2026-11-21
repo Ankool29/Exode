@@ -266,7 +266,6 @@ fn build_rules() {
     assert!(s.build_key("coffre", 0, 0, Dir::N).is_ok());
 }
 
-
 #[test]
 fn drill_drops_on_near_lane() {
     // foreuse a l'ouest d'un convoyeur qui descend vers le sud : le minerai doit arriver

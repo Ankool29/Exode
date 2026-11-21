@@ -105,3 +105,44 @@ pub fn fill_belts(sim: &mut Simulation, item: u16) -> usize {
     }
     n
 }
+
+/// Degage le terrain sous une emprise de 3 x 3 puis construit (scenes de controle).
+fn put_clear(sim: &mut Simulation, key: &str, x: i32, y: i32, d: Dir) -> Result<EntityId, String> {
+    use crate::sim::Command;
+    for dy in 0..3 {
+        for dx in 0..3 {
+            let p = Pos::new(x + dx, y + dy);
+            sim.apply(Command::ClearFeature { pos: p });
+            sim.apply(Command::FillWater { pos: p });
+        }
+    }
+    sim.build_key(key, x, y, d)
+        .map_err(|e| format!("{key} en ({x}, {y}) : {e:?}"))
+}
+
+/// Scene de controle electrique (etape 3) : une centrale sur une sous-station, une usine de
+/// fours sur une autre, reliees par un seul poteau (corridor limitant) ; plus loin, une ligne
+/// de pylones qui alimente une seconde usine sans limitation.
+pub fn build_power_demo(sim: &mut Simulation, ox: i32, oy: i32) -> Result<(), String> {
+    let a = sim.content.item("minerai_a").unwrap();
+    for (row, pylons) in [(0, false), (24, true)] {
+        let y = oy + row;
+        put_clear(sim, "sous_station", ox, y, Dir::N)?;
+        put_clear(sim, "generateur", ox - 5, y - 1, Dir::N)?;
+        put_clear(sim, "sous_station", ox + 16, y, Dir::N)?;
+        if pylons {
+            put_clear(sim, "pylone", ox + 8, y + 3, Dir::N)?;
+        } else {
+            put_clear(sim, "poteau", ox + 8, y, Dir::N)?;
+        }
+        for k in 0..7 {
+            put_clear(sim, "four", ox + 10 + 2 * k, y - 6, Dir::N)?;
+            sim.debug_insert(Pos::new(ox + 10 + 2 * k, y - 6), a, 8);
+        }
+        for k in 0..3 {
+            put_clear(sim, "four", ox + 12 + 2 * k, y + 5, Dir::N)?;
+            sim.debug_insert(Pos::new(ox + 12 + 2 * k, y + 5), a, 8);
+        }
+    }
+    Ok(())
+}

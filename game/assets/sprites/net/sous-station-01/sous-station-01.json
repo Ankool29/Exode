@@ -1,0 +1,12 @@
+{
+  "id": "net_sous-station-01_v3",
+  "proto": "sous_station",
+  "source": "EXODE etape 3 reseaux V3 (accroches recalculees sur les isolateurs, A_CORRIGER 14)",
+  "footprint_tiles": [2, 2],
+  "canvas_px": [128, 224],
+  "anchor_px": [64, 160],
+  "base": "net_sous-station-01_v3.png",
+  "shadow": "net_sous-station-01_v3_shadow.png",
+  "state": "net_sous-station-01_v3_state.png",
+  "wire_px": [[50, 136], [82, 136]]
+}

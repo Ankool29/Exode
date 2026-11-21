@@ -56,7 +56,14 @@ var resource_colors: Array[Color] = []
 ## Les batiments sans sprite gardent l'affichage provisoire.
 const SPRITE_SHEETS := {
 	"four": "res://assets/sprites/ent/four-01/four-01.json",
+	"foreuse": "res://assets/sprites/ent/foreuse-01/foreuse-01.json",
+	"assembleur": "res://assets/sprites/ent/assembleur-01/assembleur-01.json",
 }
+const SPR := "res://assets/sprites/"
+var _port_tex: Array = [] ## raccords de sortie N, E, S, O
+var _item_tex: Array = [] ## par objet : sprite de tapis (24 px) ou null
+var _res_tex: Array = [] ## par ressource : [forme][richesse] -> texture
+var _nat := {} ## 1 feuillu, 2 conifere, 3 rocher -> [[texture, ombre], ...]
 var _sprites := {} ## index de batiment -> {base, shadow, glow, parts, smoke, canvas, anchor, ...}
 var _glow_layer: Node2D
 var _fx_layer: Node2D
@@ -117,6 +124,8 @@ func _load_sprites() -> void:
 			"base": load(dir + "/" + meta.base),
 			"shadow": load(dir + "/" + meta.shadow) if meta.has("shadow") else null,
 			"glow": load(dir + "/" + meta.glow) if meta.has("glow") else null,
+			"state": load(dir + "/" + meta.state) if meta.has("state") else null,
+			"ports": bool(meta.get("ports", false)),
 			"parts": [],
 			"part_ticks": int(meta.get("part_ticks_per_frame", 6)),
 			"smoke": [],
@@ -127,6 +136,38 @@ func _load_sprites() -> void:
 		for f in meta.get("smoke_frames", []):
 			sp.smoke.append(load(f))
 		_sprites[proto] = sp
+	# raccords de sortie communs
+	_port_tex.clear()
+	for d in ["n", "e", "s", "w"]:
+		_port_tex.append(_try_load(SPR + "ent/commun/ent_part-port_%s.png" % d))
+	# objets : itm_<cle>_sol.png (les cles du noyau utilisent _, les fichiers -)
+	_item_tex.clear()
+	for k in sim.item_keys():
+		_item_tex.append(_try_load(SPR + "itm/itm_%s_sol.png" % k.replace("_", "-")))
+	# gisements : res_ressource-<lettre>_f<forme>_r<richesse>.png
+	_res_tex.clear()
+	for i in sim.resource_colors().size():
+		var forms := []
+		for f in 4:
+			var rs := []
+			for r in 4:
+				rs.append(_try_load(SPR + "res/res_ressource-%s_f%d_r%d.png" % [char(97 + i), f + 1, r + 1]))
+			forms.append(rs)
+		_res_tex.append(forms)
+	# arbres et rochers
+	_nat.clear()
+	for entry in [[1, "nat_arbre-feuillu", 3], [2, "nat_arbre-conifere", 2], [3, "nat_rocher-petit", 2]]:
+		var lst := []
+		for v in entry[2]:
+			var t = _try_load(SPR + "nat/%s_v%d.png" % [entry[1], v + 1])
+			if t != null:
+				lst.append([t, _try_load(SPR + "nat/%s_v%d_shadow.png" % [entry[1], v + 1])])
+		if not lst.is_empty():
+			_nat[entry[0]] = lst
+
+
+func _try_load(path: String):
+	return load(path) if ResourceLoader.exists(path) else null
 
 
 func invalidate_terrain() -> void:
@@ -191,8 +232,8 @@ func _chunk_texture(key: Vector2i) -> ImageTexture:
 		var rich := data[3072 + i]
 		if rk != 255 and rich > 0 and rk < resource_colors.size():
 			var rc: Color = resource_colors[rk]
-			var dot := ((lx + ly * 3 + (h >> 4)) % 4) < rich
-			c = c.lerp(rc, 0.45 + 0.15 * rich) if dot else c.lerp(rc, 0.25)
+			# teinte legere : les sprites de minerai sont dessines par-dessus au zoom normal
+			c = c.lerp(rc, 0.12 + 0.04 * rich)
 		img.set_pixel(lx, ly, c)
 	var tex := ImageTexture.create_from_image(img)
 	_chunk_tex[key] = tex
@@ -210,9 +251,11 @@ func _draw_terrain(r: Rect2i) -> void:
 			var tex := _chunk_texture(key)
 			var p := tile_to_screen(cx * CHUNK, cy * CHUNK)
 			draw_texture_rect(tex, Rect2(p, Vector2(CHUNK * zoom, CHUNK * zoom)), false)
-	# arbres et rochers (au-dela d'un certain zoom)
+	# gisements, puis arbres et rochers (au-dela d'un certain zoom)
 	if zoom < 14.0:
 		return
+	var sc := zoom / 64.0
+	var feats := []
 	for cy in range(cy0, cy1 + 1):
 		for cx in range(cx0, cx1 + 1):
 			var data: PackedByteArray = _chunk_data.get(Vector2i(cx, cy), PackedByteArray())
@@ -220,24 +263,50 @@ func _draw_terrain(r: Rect2i) -> void:
 				continue
 			for i in CHUNK * CHUNK:
 				var f := data[1024 + i]
-				if f == 0:
+				var rk := data[2048 + i]
+				if f == 0 and rk == 255:
 					continue
 				var tx := cx * CHUNK + i % CHUNK
 				var ty := cy * CHUNK + i / CHUNK
 				if tx < r.position.x or ty < r.position.y or tx > r.end.x or ty > r.end.y:
 					continue
-				var c := tile_to_screen(tx + 0.5, ty + 0.5)
-				match f:
-					1:
-						draw_circle(c + Vector2(zoom * 0.08, zoom * 0.1), zoom * 0.42, Color(0, 0, 0, 0.25))
-						draw_circle(c, zoom * 0.42, Color("2f5a26"))
-						draw_circle(c - Vector2(zoom * 0.1, zoom * 0.1), zoom * 0.2, Color("4d7d33"))
-					2:
-						var pts := PackedVector2Array([c + Vector2(0, -zoom * 0.48), c + Vector2(zoom * 0.38, zoom * 0.35), c + Vector2(-zoom * 0.38, zoom * 0.35)])
-						draw_colored_polygon(pts, Color("24482a"))
-					3:
-						var pts := PackedVector2Array([c + Vector2(-zoom * 0.35, zoom * 0.2), c + Vector2(-zoom * 0.15, -zoom * 0.3), c + Vector2(zoom * 0.3, -zoom * 0.2), c + Vector2(zoom * 0.38, zoom * 0.25)])
-						draw_colored_polygon(pts, Color("8a8a85"))
+				var hsh := absi((tx * 73856093) ^ (ty * 19349663))
+				var rich := data[3072 + i]
+				if rk != 255 and rich > 0 and rk < _res_tex.size():
+					var ri: int = [0, 0, 2, 3][mini(rich, 3)]
+					var tex = _res_tex[rk][hsh % 4][ri]
+					if tex != null:
+						draw_texture_rect(tex, Rect2(tile_to_screen(tx, ty), Vector2(zoom, zoom)), false)
+				if f != 0:
+					feats.append([tx, ty, f, hsh])
+	for ft in feats:
+		_draw_feature(ft[0], ft[1], ft[2], ft[3], sc)
+
+
+func _draw_feature(tx: int, ty: int, f: int, hsh: int, sc: float) -> void:
+	var c := tile_to_screen(tx + 0.5, ty + 0.5)
+	if _nat.has(f):
+		var lst: Array = _nat[f]
+		var v: Array = lst[(hsh >> 3) % lst.size()]
+		var tex: Texture2D = v[0]
+		var size := Vector2(tex.get_width(), tex.get_height())
+		var anchor := Vector2(size.x * 0.5, size.y - 32.0) # centre de la case, bas de l'emprise
+		var rect := Rect2(c - anchor * sc, size * sc)
+		if v[1] != null:
+			draw_texture_rect(v[1], rect, false)
+		draw_texture_rect(tex, rect, false)
+		return
+	match f:
+		1:
+			draw_circle(c + Vector2(zoom * 0.08, zoom * 0.1), zoom * 0.42, Color(0, 0, 0, 0.25))
+			draw_circle(c, zoom * 0.42, Color("2f5a26"))
+			draw_circle(c - Vector2(zoom * 0.1, zoom * 0.1), zoom * 0.2, Color("4d7d33"))
+		2:
+			var pts := PackedVector2Array([c + Vector2(0, -zoom * 0.48), c + Vector2(zoom * 0.38, zoom * 0.35), c + Vector2(-zoom * 0.38, zoom * 0.35)])
+			draw_colored_polygon(pts, Color("24482a"))
+		3:
+			var pts := PackedVector2Array([c + Vector2(-zoom * 0.35, zoom * 0.2), c + Vector2(-zoom * 0.15, -zoom * 0.3), c + Vector2(zoom * 0.3, -zoom * 0.2), c + Vector2(zoom * 0.38, zoom * 0.25)])
+			draw_colored_polygon(pts, Color("8a8a85"))
 
 
 # ---------------------------------------------------------------- entites
@@ -269,6 +338,10 @@ func _kind_color(kind: String, proto: int) -> Color:
 
 func _draw_item(center: Vector2, item: int, scale_f := 1.0) -> void:
 	if item < 0 or item >= item_colors.size():
+		return
+	if item < _item_tex.size() and _item_tex[item] != null:
+		var sz := zoom * 24.0 / 64.0 * scale_f
+		draw_texture_rect(_item_tex[item], Rect2(center - Vector2(sz, sz) * 0.5, Vector2(sz, sz)), false)
 		return
 	var s := zoom * 0.30 * scale_f
 	var rect := Rect2(center - Vector2(s, s) * 0.5, Vector2(s, s))
@@ -318,7 +391,7 @@ func _draw_sprite_shadow(proto: int, x: int, y: int, w: int, h: int) -> void:
 	draw_texture_rect(sp.shadow, Rect2(f[0], sp.canvas * f[1]), false)
 
 
-func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, status: int) -> void:
+func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int) -> void:
 	var sp: Dictionary = _sprites[proto]
 	var f := _sprite_frame(sp, x, y, w, h)
 	var tl: Vector2 = f[0]
@@ -342,7 +415,20 @@ func _draw_sprite_entity(id: int, proto: int, x: int, y: int, w: int, h: int, st
 			var c := origin + Vector2(6.0 * phase, -44.0 * phase) * sc
 			var tex: Texture2D = sp.smoke[mini(int(phase * sp.smoke.size()), sp.smoke.size() - 1)]
 			_smoke_jobs.append([tex, Rect2(c - Vector2(size, size) * 0.5, Vector2(size, size)), (1.0 - phase) * 0.9])
-	draw_circle(tl + Vector2(sp.canvas.x - 10.0, sp.canvas.y - 10.0) * sc, maxf(3.0, zoom * 0.09), STATUS_COLORS[status])
+	if sp.state != null:
+		draw_texture_rect(sp.state, rect, false, STATUS_COLORS[status].lightened(0.15))
+	else:
+		draw_circle(tl + Vector2(sp.canvas.x - 10.0, sp.canvas.y - 10.0) * sc, maxf(3.0, zoom * 0.09), STATUS_COLORS[status])
+	if sp.ports and _port_tex.size() == 4 and _port_tex[d] != null:
+		var edge: Vector2
+		match d:
+			0: edge = Vector2(x + 0.5, y)
+			1: edge = Vector2(x + w, y + 0.5)
+			2: edge = Vector2(x + w - 0.5, y + h)
+			_: edge = Vector2(x, y + h - 0.5)
+		var pc := tile_to_screen(edge.x, edge.y)
+		var ps := 32.0 * sc
+		draw_texture_rect(_port_tex[d], Rect2(pc - Vector2(ps, ps) * 0.5, Vector2(ps, ps)), false)
 	if id == selected_id:
 		draw_rect(Rect2(tile_to_screen(x, y), Vector2(w, h) * zoom), Color(1, 1, 1, 0.9), false, maxf(2.0, zoom * 0.06))
 
@@ -359,7 +445,7 @@ func _draw_fx_layer() -> void:
 
 func _draw_entity(id: int, proto: int, x: int, y: int, w: int, h: int, d: int, status: int, e1: int, e2: int) -> void:
 	if _sprites.has(proto):
-		_draw_sprite_entity(id, proto, x, y, w, h, status)
+		_draw_sprite_entity(id, proto, x, y, w, h, d, status)
 		return
 	var kind := proto_kinds[proto]
 	var p := tile_to_screen(x, y)

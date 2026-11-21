@@ -1,0 +1,22 @@
+{
+  "id": "ent_foreuse-01_v1",
+  "proto": "foreuse",
+  "source": "EXODE P0 Pionnier V2 (palette commune candidate de 64 couleurs)",
+  "footprint_tiles": [
+    2,
+    2
+  ],
+  "canvas_px": [
+    128,
+    160
+  ],
+  "anchor_px": [
+    64,
+    96
+  ],
+  "base": "ent_foreuse-01_v1.png",
+  "shadow": "ent_foreuse-01_v1_shadow.png",
+  "state": "ent_foreuse-01_v1_state.png",
+  "ports": true,
+  "map_color": "#8b6d3a"
+}
